@@ -1,10 +1,10 @@
-import { appendFileSync } from 'node:fs';
+import { readFileSync, appendFileSync, watch as fsWatch } from 'node:fs';
 import { parseClaimsJson, readClaimsFromFile } from './claims.js';
 import { verifyClaims } from './verifier.js';
 import { formatGitHubJobSummary, formatMarkdownSummary, formatTerminalTable } from './formatter.js';
 import { initProject } from './init.js';
 import { postGitHubCheckRun } from './github.js';
-import { Claim, VerifyOptions } from './types.js';
+import { Claim, VerifyOptions, VerifyReport } from './types.js';
 
 function printHelp(): void {
   console.log(`
@@ -26,6 +26,7 @@ Init Options:
   --cwd <path>         Target working directory (default: current directory)
 
 Verify Options:
+  -w, --watch          Watch claims file for changes and re-verify automatically
   --strict             Exit with non-zero code if any claim is unmet (default: exit 0 in report mode)
   --format <type>      Output format: table (default), markdown, or json
   --cwd <path>         Working directory to evaluate claims in (default: current directory)
@@ -87,6 +88,7 @@ export async function runCli(args: string[] = process.argv.slice(2)): Promise<nu
   let strict = false;
   let force = false;
   let githubAction = false;
+  let watch = false;
   let format: 'table' | 'markdown' | 'json' = 'table';
   let cwd = process.cwd();
   let sinceTimestamp: number | undefined;
@@ -101,6 +103,8 @@ export async function runCli(args: string[] = process.argv.slice(2)): Promise<nu
       command = 'init';
     } else if (arg === 'verify') {
       command = 'verify';
+    } else if (arg === '-w' || arg === '--watch') {
+      watch = true;
     } else if (arg === '--strict') {
       strict = true;
     } else if (arg === '--force') {
@@ -179,6 +183,80 @@ export async function runCli(args: string[] = process.argv.slice(2)): Promise<nu
     return 1;
   }
 
+  const options: VerifyOptions = {
+    cwd,
+    strict,
+    detectUnclaimed,
+    sinceTimestamp,
+  };
+
+  const executeVerification = async (claimsToVerify: Claim[]): Promise<VerifyReport> => {
+    const report = await verifyClaims(claimsToVerify, options);
+
+    if (format === 'json') {
+      console.log(JSON.stringify(report, null, 2));
+    } else if (format === 'markdown') {
+      console.log(formatMarkdownSummary(report));
+    } else {
+      console.log(formatTerminalTable(report));
+    }
+
+    if ((writeSummary || process.env.GITHUB_STEP_SUMMARY) && summaryFile) {
+      try {
+        const jobSummaryMd = formatGitHubJobSummary(report);
+        appendFileSync(summaryFile, `\n${jobSummaryMd}\n`, 'utf-8');
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        console.error(`Warning: Failed to write GitHub step summary to ${summaryFile}: ${message}`);
+      }
+    }
+
+    return report;
+  };
+
+  if (watch) {
+    if (!fileArg) {
+      console.error('Error: --watch requires a claims file path.');
+      return 1;
+    }
+
+    console.log(`[upheld] Watching for changes in ${fileArg}... (Press Ctrl+C to stop)`);
+
+    const runWatchIteration = async () => {
+      try {
+        const claims = await readClaimsFromFile(fileArg);
+        console.log(`\n[upheld] Claims file changed: ${new Date().toLocaleTimeString()}`);
+        await executeVerification(claims);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        console.error(`[upheld] Error reloading claims: ${message}`);
+      }
+    };
+
+    // Initial run
+    await runWatchIteration();
+
+    let debounceTimer: NodeJS.Timeout | null = null;
+    const watcher = fsWatch(fileArg, (eventType) => {
+      if (eventType === 'change' || eventType === 'rename') {
+        if (debounceTimer) clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+          runWatchIteration();
+        }, 150);
+      }
+    });
+
+    return new Promise((resolve) => {
+      const cleanup = () => {
+        if (debounceTimer) clearTimeout(debounceTimer);
+        watcher.close();
+        resolve(0);
+      };
+      process.on('SIGINT', cleanup);
+      process.on('SIGTERM', cleanup);
+    });
+  }
+
   let claims: Claim[] = [];
 
   try {
@@ -199,33 +277,7 @@ export async function runCli(args: string[] = process.argv.slice(2)): Promise<nu
     return 1;
   }
 
-  const options: VerifyOptions = {
-    cwd,
-    strict,
-    detectUnclaimed,
-    sinceTimestamp,
-  };
-
-  const report = await verifyClaims(claims, options);
-
-  if (format === 'json') {
-    console.log(JSON.stringify(report, null, 2));
-  } else if (format === 'markdown') {
-    console.log(formatMarkdownSummary(report));
-  } else {
-    console.log(formatTerminalTable(report));
-  }
-
-  // If in GitHub Action environment or requested summary file, write job summary
-  if ((writeSummary || process.env.GITHUB_STEP_SUMMARY) && summaryFile) {
-    try {
-      const jobSummaryMd = formatGitHubJobSummary(report);
-      appendFileSync(summaryFile, `\n${jobSummaryMd}\n`, 'utf-8');
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err);
-      console.error(`Warning: Failed to write GitHub step summary to ${summaryFile}: ${message}`);
-    }
-  }
+  const report = await executeVerification(claims);
 
   if (enableGitHubCheck) {
     try {

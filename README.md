@@ -187,6 +187,14 @@ Options:
 - `--force`: Overwrite existing files (by default, existing files are skipped).
 - `--cwd <dir>`: Target working directory (default: current directory).
 
+### Verify Claims in Watch Mode
+Watch a claims file for changes and re-verify automatically during development:
+```bash
+node dist/bin.js verify --watch path/to/claims.json
+# or
+npx . verify -w path/to/claims.json
+```
+
 ### Verify Claims from a File
 ```bash
 node dist/bin.js verify path/to/claims.json
@@ -207,11 +215,31 @@ node dist/bin.js verify --github-check claims.json
 # or
 npx . verify --github-check claims.json
 ```
+
 ---
 
-## Integrations (Planned / Scaffold Tip)
+## Integrations
 
-> **Note**: Example hook scripts and the GitHub Actions composite action land with the scaffold PR ([#1](https://github.com/chuofringer/upheld/pull/1)). Once merged to `main`, integration workflows will become available:
+### Pre-Commit Hooks (Husky / Lefthook)
+Ensure agent and developer claims are upheld before code is committed. See [`examples/pre-commit/`](./examples/pre-commit/).
+
+#### Husky (`.husky/pre-commit`)
+One-liner:
+```bash
+test -f .upheld/claims.json && npx . verify --strict .upheld/claims.json || true
+```
+
+#### Lefthook (`lefthook.yml`)
+One-liner:
+```yaml
+pre-commit:
+  commands:
+    upheld:
+      run: test -f .upheld/claims.json && npx . verify --strict .upheld/claims.json || true
+```
+
+### Claude Code Stop-Hook
+Upheld can run as a Claude Code Stop-hook to verify an agent's claims before concluding a session. See [`examples/claude-code-hook/`](./examples/claude-code-hook/) for setup and scripts.
 
 ### GitHub Actions
 To verify claims in CI, run the built CLI directly or invoke local verify steps:
