@@ -31,11 +31,13 @@
     "prepublishOnly": "npm run build"
   },
   "keywords": [
-    "ai-agents",
     "claims",
+    "agent",
+    "verify",
+    "claude-code",
+    "ai-agents",
     "evidence",
     "verification",
-    "claude-code",
     "testing",
     "benchmarking"
   ],

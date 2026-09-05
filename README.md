@@ -156,6 +156,26 @@ npm test
 
 ---
 
+## Publishing (Maintainers Only / Dry-Run Verification)
+
+> **Notice:** Publishing to npm is restricted to repository owners / maintainers (`@chuofringer`) and is planned for a future release. Upheld is not yet published to npm.
+
+To verify the package contents that will be included in future releases via dry-run:
+
+```bash
+npm pack --dry-run
+```
+
+When ready for release (maintainers only):
+
+```bash
+npm publish --access public --dry-run
+# Actual publish (owners only upon release):
+# npm publish --access public
+```
+
+---
+
 ## License
 
 MIT © [vibemapper](https://github.com/chuofringer/upheld)
