@@ -2,7 +2,7 @@ import { readFileSync, appendFileSync, writeFileSync, watch as fsWatch } from 'n
 import { readFile } from 'node:fs/promises';
 import { parseClaimsJson, readClaimsFromFile } from './claims.js';
 import { verifyClaims } from './verifier.js';
-import { formatGitHubJobSummary, formatMarkdownSummary, formatTerminalTable } from './formatter.js';
+import { formatGitHubJobSummary, formatMarkdownSummary, formatTerminalTable, formatSarifReport } from './formatter.js';
 import { initProject } from './init.js';
 import { postGitHubCheckRun } from './github.js';
 import { extractClaimsFromTranscript } from './extractor.js';
@@ -33,12 +33,13 @@ Init Options:
 Verify Options:
   -w, --watch          Watch claims file for changes and re-verify automatically
   --strict             Exit with non-zero code if any claim is unmet (default: exit 0 in report mode)
-  --format <type>      Output format: table (default), markdown, or json
+  --format <type>      Output format: table (default), markdown, json, or sarif
   --cwd <path>         Working directory to evaluate claims in (default: current directory)
   --since <timestamp>  Evaluation window start timestamp (ms or ISO date) for file writes
   --no-unclaimed       Disable detection of unclaimed modified/untracked files
   --json               Shortcut for --format json
   --markdown           Shortcut for --format markdown
+  --sarif              Shortcut for --format sarif
   --github-check       Post/update a GitHub check run named "Upheld — Claims vs evidence" (no-op if GITHUB_TOKEN/GITHUB_SHA missing)
   --summary            Output GitHub Action job summary format
   --summary-file <f>   Append job summary to specified file (or $GITHUB_STEP_SUMMARY)
@@ -97,7 +98,7 @@ export async function runCli(args: string[] = process.argv.slice(2)): Promise<nu
   let force = false;
   let githubAction = false;
   let watch = false;
-  let format: 'table' | 'markdown' | 'json' = 'table';
+  let format: 'table' | 'markdown' | 'json' | 'sarif' = 'table';
   let cwd = process.cwd();
   let sinceTimestamp: number | undefined;
   let detectUnclaimed = true;
@@ -140,6 +141,8 @@ export async function runCli(args: string[] = process.argv.slice(2)): Promise<nu
       format = 'json';
     } else if (arg === '--markdown') {
       format = 'markdown';
+    } else if (arg === '--sarif') {
+      format = 'sarif';
     } else if (arg === '--github-check') {
       enableGitHubCheck = true;
     } else if (arg === '--summary') {
@@ -156,10 +159,10 @@ export async function runCli(args: string[] = process.argv.slice(2)): Promise<nu
       dedupe = false;
     } else if (arg === '--format') {
       const next = args[++i];
-      if (next === 'table' || next === 'markdown' || next === 'json') {
+      if (next === 'table' || next === 'markdown' || next === 'json' || next === 'sarif') {
         format = next;
       } else {
-        console.error(`Invalid format: ${next}. Choose table, markdown, or json.`);
+        console.error(`Invalid format: ${next}. Choose table, markdown, json, or sarif.`);
         return 1;
       }
     } else if (arg === '--cwd') {
@@ -268,6 +271,8 @@ export async function runCli(args: string[] = process.argv.slice(2)): Promise<nu
       console.log(JSON.stringify(report, null, 2));
     } else if (format === 'markdown') {
       console.log(formatMarkdownSummary(report));
+    } else if (format === 'sarif') {
+      console.log(formatSarifReport(report));
     } else {
       console.log(formatTerminalTable(report));
     }
@@ -354,7 +359,7 @@ export async function runCli(args: string[] = process.argv.slice(2)): Promise<nu
     try {
       const checkResult = await postGitHubCheckRun(report);
       if (checkResult.posted) {
-        if (format !== 'json') {
+        if (format !== 'json' && format !== 'sarif') {
           console.log(`GitHub Check Run posted: ${checkResult.url ?? `Check Run #${checkResult.checkRunId}`}`);
         }
       } else if (checkResult.error) {

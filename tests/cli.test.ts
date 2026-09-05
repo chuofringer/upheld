@@ -89,6 +89,61 @@ describe('CLI Integration', () => {
     expect(code).toBe(1);
   });
 
+  it('supports --format sarif option', async () => {
+    let output = '';
+    const originalLog = console.log;
+    console.log = (msg: string) => {
+      output += msg + '\n';
+    };
+
+    try {
+      const code = await runCli([
+        'verify',
+        '--format',
+        'sarif',
+        resolve(fixturesDir, 'claims-unmet.json'),
+        '--cwd',
+        resolve(__dirname, '..'),
+        '--no-unclaimed',
+        '--since',
+        '0',
+      ]);
+      expect(code).toBe(0);
+      const parsed = JSON.parse(output);
+      expect(parsed.$schema).toContain('sarif');
+      expect(parsed.runs[0].results.length).toBeGreaterThan(0);
+    } finally {
+      console.log = originalLog;
+    }
+  });
+
+  it('supports --sarif shortcut flag', async () => {
+    let output = '';
+    const originalLog = console.log;
+    console.log = (msg: string) => {
+      output += msg + '\n';
+    };
+
+    try {
+      const code = await runCli([
+        'verify',
+        '--sarif',
+        resolve(fixturesDir, 'claims-unmet.json'),
+        '--cwd',
+        resolve(__dirname, '..'),
+        '--no-unclaimed',
+        '--since',
+        '0',
+      ]);
+      expect(code).toBe(0);
+      const parsed = JSON.parse(output);
+      expect(parsed.version).toBe('2.1.0');
+      expect(parsed.runs[0].tool.driver.name).toBe('upheld');
+    } finally {
+      console.log = originalLog;
+    }
+  });
+
   it('fails if --watch is provided without a claims file', async () => {
     const code = await runCli(['verify', '--watch']);
     expect(code).toBe(1);
