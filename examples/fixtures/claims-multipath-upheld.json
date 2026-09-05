@@ -1,0 +1,23 @@
+{
+  "version": "1.0",
+  "claims": [
+    {
+      "type": "file_written",
+      "paths": [
+        "examples/sample-project/src/math.ts",
+        "examples/sample-project/tests/math.test.ts"
+      ],
+      "glob": "examples/sample-project/**/*.ts",
+      "minMatches": 2,
+      "description": "Multi-path and glob verification of sample project artifacts"
+    },
+    {
+      "type": "tests_pass",
+      "cmd": "npx vitest run --config examples/sample-project/vitest.config.ts",
+      "passed": 2,
+      "failed": 0,
+      "total": 2,
+      "description": "Passing test suite for sample project"
+    }
+  ]
+}

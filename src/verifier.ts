@@ -1,6 +1,6 @@
-import { Claim, VerifyOptions, VerifyReport, VerificationResult } from './types.js';
+import { Claim, VerifyOptions, VerifyReport, VerificationResult, PathEvidenceResult } from './types.js';
 import { executeTestCommand } from './runners/index.js';
-import { checkFileEvidence } from './checker.js';
+import { checkFileEvidence, checkPathEvidence, matchGlobs } from './checker.js';
 import { detectUntrackedAndModifiedFiles } from './git.js';
 
 export async function verifyClaims(
@@ -110,38 +110,153 @@ export async function verifyClaims(
         details,
       });
     } else if (claim.type === 'file_written') {
-      claimedFilePaths.add(claim.path);
-      const claimSummary = `path: ${claim.path}`;
-
-      const evidence = await checkFileEvidence(claim.path, {
-        cwd,
-        sinceTimestamp: options.sinceTimestamp,
-      });
-
-      let status: 'upheld' | 'unmet' = 'unmet';
-      let evidenceSummary = '';
-      let details: string | undefined;
-
-      if (!evidence.exists) {
-        evidenceSummary = 'does not exist';
-        details = `File '${claim.path}' was not found`;
-      } else if (!evidence.modifiedThisRun) {
-        evidenceSummary = `exists (size: ${evidence.sizeBytes ?? 0} B, unchanged)`;
-        details = `File '${claim.path}' exists but has no evidence of write or change this run (unmodified in git status and mtime prior to evaluation window)`;
-      } else {
-        status = 'upheld';
-        evidenceSummary = `exists (size: ${evidence.sizeBytes ?? 0} B, modified/created)`;
+      const explicitPaths: string[] = [];
+      if (claim.path) {
+        explicitPaths.push(claim.path);
+      }
+      if (claim.paths && Array.isArray(claim.paths)) {
+        for (const p of claim.paths) {
+          if (p && !explicitPaths.includes(p)) {
+            explicitPaths.push(p);
+          }
+        }
       }
 
-      results.push({
-        id,
-        type: 'file_written',
-        status,
-        claim,
-        claimSummary,
-        evidenceSummary,
-        details,
-      });
+      let globMatchedPaths: string[] = [];
+      let globUsed = false;
+      if (claim.glob) {
+        globUsed = true;
+        globMatchedPaths = await matchGlobs(claim.glob, cwd);
+      }
+
+      const allTargetPaths = Array.from(new Set([...explicitPaths, ...globMatchedPaths]));
+      for (const p of allTargetPaths) {
+        claimedFilePaths.add(p);
+      }
+
+      const isMulti = allTargetPaths.length > 1 || (claim.paths && claim.paths.length > 0) || globUsed;
+
+      if (!isMulti && explicitPaths.length === 1) {
+        // Single file check (maintain backwards compatible summaries)
+        const targetPath = explicitPaths[0];
+        claimedFilePaths.add(targetPath);
+        const claimSummary = `path: ${targetPath}`;
+
+        const evidence = await checkFileEvidence(targetPath, {
+          cwd,
+          sinceTimestamp: options.sinceTimestamp,
+        });
+
+        let status: 'upheld' | 'unmet' = 'unmet';
+        let evidenceSummary = '';
+        let details: string | undefined;
+
+        if (!evidence.exists) {
+          evidenceSummary = 'does not exist';
+          details = `File '${targetPath}' was not found`;
+        } else if (!evidence.modifiedThisRun) {
+          evidenceSummary = `exists (size: ${evidence.sizeBytes ?? 0} B, unchanged)`;
+          details = `File '${targetPath}' exists but has no evidence of write or change this run (unmodified in git status and mtime prior to evaluation window)`;
+        } else {
+          status = 'upheld';
+          evidenceSummary = `exists (size: ${evidence.sizeBytes ?? 0} B, modified/created)`;
+        }
+
+        const pathRes: PathEvidenceResult = {
+          path: targetPath,
+          status,
+          exists: evidence.exists,
+          sizeBytes: evidence.sizeBytes,
+          modifiedThisRun: evidence.modifiedThisRun,
+          details,
+        };
+
+        results.push({
+          id,
+          type: 'file_written',
+          status,
+          claim,
+          claimSummary,
+          evidenceSummary,
+          details,
+          paths: [pathRes],
+        });
+      } else {
+        // Multi-path or glob claim
+        let claimSummaryParts: string[] = [];
+        if (claim.paths && claim.paths.length > 0) {
+          claimSummaryParts.push(`paths: [${claim.paths.join(', ')}]`);
+        } else if (claim.path) {
+          claimSummaryParts.push(`path: ${claim.path}`);
+        }
+
+        if (claim.glob) {
+          const globDesc = Array.isArray(claim.glob) ? `[${claim.glob.join(', ')}]` : claim.glob;
+          claimSummaryParts.push(`glob: ${globDesc}`);
+        }
+
+        const claimSummary = claimSummaryParts.join(', ');
+        const pathResults: PathEvidenceResult[] = [];
+
+        // Check if glob matched minimum files
+        const minMatches = claim.minMatches ?? (globUsed ? 1 : 0);
+        let globMinError: string | undefined;
+        if (globUsed && allTargetPaths.length < minMatches) {
+          globMinError = `Glob matched ${allTargetPaths.length} file(s), but minimum required is ${minMatches}`;
+        }
+
+        if (allTargetPaths.length === 0) {
+          const detailMsg = globMinError ?? 'No paths specified or matched';
+          results.push({
+            id,
+            type: 'file_written',
+            status: 'unmet',
+            claim,
+            claimSummary,
+            evidenceSummary: '0 paths found',
+            details: detailMsg,
+            paths: [],
+          });
+          continue;
+        }
+
+        for (const targetPath of allTargetPaths) {
+          const pathRes = await checkPathEvidence(targetPath, {
+            cwd,
+            sinceTimestamp: options.sinceTimestamp,
+          });
+          pathResults.push(pathRes);
+        }
+
+        const upheldPaths = pathResults.filter((p) => p.status === 'upheld');
+        const unmetPaths = pathResults.filter((p) => p.status === 'unmet');
+
+        const isOverallUpheld = unmetPaths.length === 0 && !globMinError;
+        const status: 'upheld' | 'unmet' = isOverallUpheld ? 'upheld' : 'unmet';
+
+        const evidenceSummary = `${upheldPaths.length}/${pathResults.length} paths upheld (${pathResults.map((p) => `${p.path}: ${p.status}`).join(', ')})`;
+
+        const detailParts: string[] = [];
+        if (globMinError) {
+          detailParts.push(globMinError);
+        }
+        for (const un of unmetPaths) {
+          if (un.details) {
+            detailParts.push(un.details);
+          }
+        }
+
+        results.push({
+          id,
+          type: 'file_written',
+          status,
+          claim,
+          claimSummary,
+          evidenceSummary,
+          details: detailParts.length > 0 ? detailParts.join('; ') : undefined,
+          paths: pathResults,
+        });
+      }
     }
   }
 

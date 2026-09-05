@@ -103,8 +103,9 @@ Verifies that a specified test command passes by independently executing it and 
 ```
 
 ### 2. `file_written`
-Verifies that a file was **genuinely written or modified during the run**, backed by git working tree mutation signals or modification timestamps within the `--since` window.
+Verifies that files were **genuinely written or modified during the run**, backed by git working tree mutation signals or modification timestamps within the `--since` window. Supports single paths, multi-path arrays, and glob pattern expansions with fail-closed honesty.
 
+#### Single File Path
 ```json
 {
   "type": "file_written",
@@ -113,6 +114,41 @@ Verifies that a file was **genuinely written or modified during the run**, backe
 ```
 
 > ⚠️ **Write Evidence vs. Existence**: If a file exists on disk from an earlier run but was never modified during the current session, Upheld marks the claim as `UNMET`.
+
+#### Multi-Path List (`paths`)
+Verify multiple target artifacts within a single claim. Each path is individually checked for existence and modification evidence:
+```json
+{
+  "type": "file_written",
+  "paths": [
+    "src/verifier.ts",
+    "src/checker.ts",
+    "tests/verifier.test.ts"
+  ]
+}
+```
+
+#### Glob Pattern Matching (`glob` & `minMatches`)
+Verify matched artifacts dynamically across patterns (e.g. `**/*.ts`). You can specify `minMatches` (defaults to `1` when glob is used) to enforce a minimum number of matched and modified files:
+```json
+{
+  "type": "file_written",
+  "glob": "src/**/*.ts",
+  "minMatches": 3
+}
+```
+
+#### Combined Paths & Glob
+You can combine explicit paths and glob patterns in a single claim:
+```json
+{
+  "type": "file_written",
+  "paths": ["README.md", "package.json"],
+  "glob": "tests/**/*.test.ts"
+}
+```
+
+*Honesty guarantee:* If any path in a multi-path claim is missing or unmodified during the evaluation window, or if a glob matches fewer than `minMatches`, the claim evaluates to **UNMET** (fail-closed) with itemized per-path evidence reporting.
 
 ### Full Claims File Example (`claims.json`)
 

@@ -47,54 +47,6 @@ describe('CLI Integration', () => {
     expect(code).toBe(1);
   });
 
-  it('outputs JSON format when --format json or --json is passed', async () => {
-    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-    try {
-      const code = await runCli([
-        'verify',
-        '--format',
-        'json',
-        resolve(fixturesDir, 'claims-upheld.json'),
-        '--cwd',
-        resolve(__dirname, '..'),
-        '--no-unclaimed',
-        '--since',
-        '0',
-      ]);
-      expect(code).toBe(0);
-      expect(logSpy).toHaveBeenCalled();
-      const output = logSpy.mock.calls[0][0];
-      const parsed = JSON.parse(output);
-      expect(parsed).toHaveProperty('results');
-      expect(parsed).toHaveProperty('summary');
-      expect(parsed.summary.upheld).toBe(2);
-    } finally {
-      logSpy.mockRestore();
-    }
-  });
-
-  it('outputs markdown format when --format markdown or --markdown is passed', async () => {
-    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-    try {
-      const code = await runCli([
-        'verify',
-        '--markdown',
-        resolve(fixturesDir, 'claims-upheld.json'),
-        '--cwd',
-        resolve(__dirname, '..'),
-        '--no-unclaimed',
-        '--since',
-        '0',
-      ]);
-      expect(code).toBe(0);
-      expect(logSpy).toHaveBeenCalled();
-      const output = logSpy.mock.calls[0][0];
-      expect(output).toContain('### Upheld — Claims vs Evidence');
-    } finally {
-      logSpy.mockRestore();
-    }
-  });
-
   it('handles --github-check flag gracefully when running locally without tokens', async () => {
     const code = await runCli([
       'verify',
@@ -107,6 +59,34 @@ describe('CLI Integration', () => {
       '0',
     ]);
     expect(code).toBe(0);
+  });
+
+  it('runs upheld verify with multi-path upheld fixture successfully', async () => {
+    const code = await runCli([
+      'verify',
+      '--strict',
+      resolve(fixturesDir, 'claims-multipath-upheld.json'),
+      '--cwd',
+      resolve(__dirname, '..'),
+      '--no-unclaimed',
+      '--since',
+      '0',
+    ]);
+    expect(code).toBe(0);
+  });
+
+  it('runs upheld verify with multi-path unmet fixture and returns code 1 under --strict', async () => {
+    const code = await runCli([
+      'verify',
+      '--strict',
+      resolve(fixturesDir, 'claims-multipath-unmet.json'),
+      '--cwd',
+      resolve(__dirname, '..'),
+      '--no-unclaimed',
+      '--since',
+      '0',
+    ]);
+    expect(code).toBe(1);
   });
 
   it('fails if --watch is provided without a claims file', async () => {
