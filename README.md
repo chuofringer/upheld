@@ -17,7 +17,7 @@ Agents often claim they performed tasks, passed test suites, or wrote specific f
 - **Report & Strict Modes**:
   - **Report Mode (default)**: Emits a structured Claims vs Evidence table and exits `0` for transparent observation.
   - **Strict Mode (`--strict`)**: Exits with a non-zero code if any claim is unmet or fails.
-- **GitHub Actions & Job Summary**: Automatically renders Markdown job summaries in `$GITHUB_STEP_SUMMARY`.
+  - **GitHub Actions & Job Summary**: Automatically renders Markdown job summaries in `$GITHUB_STEP_SUMMARY`, and outputs workflow annotations (`::error`, `::warning`) or SARIF v2.1.0 reports for GitHub Code Scanning.
 - **Lightweight & Honest**: Minimal footprint, zero external bloat, Node 20+.
 
 ---
@@ -73,7 +73,9 @@ cat claims.json | upheld verify
 
 ### Options
 - `--strict`: Exit non-zero if any claim is unmet.
-- `--format <table|markdown|json>`: Choose output format (`--json` and `--markdown` are shortcuts).
+- `--format <table|markdown|json|annotations|sarif>`: Choose output format (`--json`, `--markdown`, `--annotations`, and `--sarif` are shortcuts).
+- `--annotations`: Shortcut for `--format annotations` (emits GitHub workflow command annotations e.g. `::error file=...` and `::warning file=...`).
+- `--sarif`: Shortcut for `--format sarif` (emits SARIF v2.1.0 JSON format for GitHub Code Scanning).
 - `--cwd <dir>`: Set working directory for evaluation.
 - `--no-unclaimed`: Disable git status unclaimed file detection.
 - `--summary`: Output GitHub Action job summary format.
@@ -116,6 +118,24 @@ Add Upheld to your CI workflow using our composite action:
   with:
     claims-file: '.upheld/claims.json'
     strict: 'false' # report mode
+    format: 'table' # or 'annotations', 'sarif', 'markdown', 'json'
+```
+
+#### GitHub Workflow Annotations
+To produce inline PR annotations for unmet claims and unclaimed modifications in GitHub Actions:
+```bash
+upheld verify --annotations .upheld/claims.json
+```
+This outputs workflow commands such as:
+```text
+::error file=src/missing.ts,title=Unmet Claim%3A path%3A src/missing.ts::File 'src/missing.ts' was not found
+::warning file=temp.log,title=Unclaimed File Change::File 'temp.log' was modified or created in git status but not claimed
+```
+
+#### GitHub Code Scanning (SARIF)
+To generate a SARIF log compatible with GitHub code scanning (`github/codeql-action/upload-sarif`):
+```bash
+upheld verify --format sarif .upheld/claims.json > upheld.sarif
 ```
 
 ---

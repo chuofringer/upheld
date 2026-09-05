@@ -18,6 +18,10 @@ inputs:
     description: 'Whether to fail the step if any claim is unmet (true/false)'
     required: false
     default: 'false'
+  format:
+    description: 'Output format: table, markdown, json, annotations, or sarif'
+    required: false
+    default: 'table'
   working-directory:
     description: 'Working directory for verification'
     required: false
@@ -58,6 +62,7 @@ runs:
       working-directory: ${{ inputs.working-directory }}
       env:
         STRICT: ${{ inputs.strict }}
+        FORMAT: ${{ inputs.format }}
         CLAIMS_FILE: ${{ inputs.claims-file }}
         CLAIMS_JSON: ${{ inputs.claims-json }}
       run: |
@@ -66,10 +71,15 @@ runs:
           STRICT_FLAG="--strict"
         fi
 
+        FORMAT_FLAG=""
+        if [ -n "$FORMAT" ]; then
+          FORMAT_FLAG="--format $FORMAT"
+        fi
+
         if [ -n "$CLAIMS_JSON" ]; then
-          echo "$CLAIMS_JSON" | upheld verify $STRICT_FLAG
+          echo "$CLAIMS_JSON" | upheld verify $STRICT_FLAG $FORMAT_FLAG
         elif [ -f "$CLAIMS_FILE" ]; then
-          upheld verify $STRICT_FLAG "$CLAIMS_FILE"
+          upheld verify $STRICT_FLAG $FORMAT_FLAG "$CLAIMS_FILE"
         else
           echo "::warning::No claims file found at $CLAIMS_FILE and no raw claims JSON provided."
         fi

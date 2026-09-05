@@ -23,6 +23,7 @@ export interface ClaimsDocument {
 }
 
 export type VerificationStatus = 'upheld' | 'unmet' | 'unclaimed';
+export type OutputFormat = 'table' | 'markdown' | 'json' | 'annotations' | 'sarif';
 
 export interface TestResultMetrics {
   cmd: string;

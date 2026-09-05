@@ -1,8 +1,14 @@
 import { readFileSync, appendFileSync } from 'node:fs';
 import { parseClaimsJson, readClaimsFromFile } from './claims.js';
 import { verifyClaims } from './verifier.js';
-import { formatGitHubJobSummary, formatMarkdownSummary, formatTerminalTable } from './formatter.js';
-import { Claim, VerifyOptions } from './types.js';
+import {
+  formatGitHubAnnotations,
+  formatGitHubJobSummary,
+  formatMarkdownSummary,
+  formatSarif,
+  formatTerminalTable,
+} from './formatter.js';
+import { Claim, OutputFormat, VerifyOptions } from './types.js';
 
 function printHelp(): void {
   console.log(`
@@ -15,11 +21,13 @@ Usage:
 
 Options:
   --strict             Exit with non-zero code if any claim is unmet (default: exit 0 in report mode)
-  --format <type>      Output format: table (default), markdown, or json
+  --format <type>      Output format: table (default), markdown, json, annotations, or sarif
   --cwd <path>         Working directory to evaluate claims in (default: current directory)
   --no-unclaimed       Disable detection of unclaimed modified/untracked files
   --json               Shortcut for --format json
   --markdown           Shortcut for --format markdown
+  --annotations        Shortcut for --format annotations (GitHub workflow commands)
+  --sarif              Shortcut for --format sarif (SARIF v2.1.0 JSON)
   --summary            Output GitHub Action job summary format
   --summary-file <f>   Append job summary to specified file (or $GITHUB_STEP_SUMMARY)
   -h, --help           Show this help message
@@ -70,7 +78,7 @@ export async function runCli(args: string[] = process.argv.slice(2)): Promise<nu
   let command = 'verify';
   let fileArg: string | undefined;
   let strict = false;
-  let format: 'table' | 'markdown' | 'json' = 'table';
+  let format: OutputFormat = 'table';
   let cwd = process.cwd();
   let detectUnclaimed = true;
   let summaryFile: string | undefined = process.env.GITHUB_STEP_SUMMARY;
@@ -86,6 +94,10 @@ export async function runCli(args: string[] = process.argv.slice(2)): Promise<nu
       format = 'json';
     } else if (arg === '--markdown') {
       format = 'markdown';
+    } else if (arg === '--annotations') {
+      format = 'annotations';
+    } else if (arg === '--sarif') {
+      format = 'sarif';
     } else if (arg === '--summary') {
       format = 'markdown';
       writeSummary = true;
@@ -96,10 +108,10 @@ export async function runCli(args: string[] = process.argv.slice(2)): Promise<nu
       detectUnclaimed = false;
     } else if (arg === '--format') {
       const next = args[++i];
-      if (next === 'table' || next === 'markdown' || next === 'json') {
+      if (next === 'table' || next === 'markdown' || next === 'json' || next === 'annotations' || next === 'sarif') {
         format = next;
       } else {
-        console.error(`Invalid format: ${next}. Choose table, markdown, or json.`);
+        console.error(`Invalid format: ${next}. Choose table, markdown, json, annotations, or sarif.`);
         return 1;
       }
     } else if (arg === '--cwd') {
@@ -147,6 +159,13 @@ export async function runCli(args: string[] = process.argv.slice(2)): Promise<nu
     console.log(JSON.stringify(report, null, 2));
   } else if (format === 'markdown') {
     console.log(formatMarkdownSummary(report));
+  } else if (format === 'annotations') {
+    const annotations = formatGitHubAnnotations(report);
+    if (annotations) {
+      console.log(annotations);
+    }
+  } else if (format === 'sarif') {
+    console.log(formatSarif(report));
   } else {
     console.log(formatTerminalTable(report));
   }

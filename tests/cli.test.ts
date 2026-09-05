@@ -38,4 +38,54 @@ describe('CLI Integration', () => {
     ]);
     expect(code).toBe(1);
   });
+
+  it('runs upheld verify with --format annotations', async () => {
+    const code = await runCli([
+      'verify',
+      '--format',
+      'annotations',
+      resolve(fixturesDir, 'claims-unmet.json'),
+      '--cwd',
+      resolve(__dirname, '..'),
+      '--no-unclaimed',
+    ]);
+    expect(code).toBe(0);
+  });
+
+  it('runs upheld verify with --annotations shortcut', async () => {
+    const code = await runCli([
+      'verify',
+      '--annotations',
+      resolve(fixturesDir, 'claims-unmet.json'),
+      '--cwd',
+      resolve(__dirname, '..'),
+      '--no-unclaimed',
+    ]);
+    expect(code).toBe(0);
+  });
+
+  it('runs upheld verify with --format sarif', async () => {
+    const code = await runCli([
+      'verify',
+      '--format',
+      'sarif',
+      resolve(fixturesDir, 'claims-unmet.json'),
+      '--cwd',
+      resolve(__dirname, '..'),
+      '--no-unclaimed',
+    ]);
+    expect(code).toBe(0);
+  });
+
+  it('runs upheld verify with --sarif shortcut', async () => {
+    const code = await runCli([
+      'verify',
+      '--sarif',
+      resolve(fixturesDir, 'claims-unmet.json'),
+      '--cwd',
+      resolve(__dirname, '..'),
+      '--no-unclaimed',
+    ]);
+    expect(code).toBe(0);
+  });
 });

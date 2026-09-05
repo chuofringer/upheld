@@ -134,6 +134,145 @@ export function formatGitHubJobSummary(report: VerifyReport): string {
   return lines.join('\n');
 }
 
+export function formatGitHubAnnotations(report: VerifyReport): string {
+  const lines: string[] = [];
+
+  for (const r of report.results) {
+    if (r.status === 'unmet') {
+      const title = escapeAnnotationValue(`Unmet Claim: ${r.claimSummary}`);
+      const message = escapeAnnotationData(r.details || `Unmet claim: ${r.claimSummary}. Observed: ${r.evidenceSummary}`);
+      if (r.claim && r.claim.type === 'file_written' && r.claim.path) {
+        lines.push(`::error file=${escapeAnnotationValue(r.claim.path)},title=${title}::${message}`);
+      } else {
+        lines.push(`::error title=${title}::${message}`);
+      }
+    } else if (r.status === 'unclaimed') {
+      const title = escapeAnnotationValue('Unclaimed File Change');
+      const message = escapeAnnotationData(r.details || r.evidenceSummary);
+      const match = r.evidenceSummary.match(/unclaimed file written\/modified: (.+)$/);
+      if (match && match[1]) {
+        lines.push(`::warning file=${escapeAnnotationValue(match[1])},title=${title}::${message}`);
+      } else {
+        lines.push(`::warning title=${title}::${message}`);
+      }
+    }
+  }
+
+  return lines.join('\n');
+}
+
+export function formatSarif(report: VerifyReport): string {
+  const rules = [
+    {
+      id: 'UPHELD001',
+      name: 'UnmetClaim',
+      shortDescription: {
+        text: 'Agent claim was unmet by empirical evidence',
+      },
+      fullDescription: {
+        text: 'A claimed artifact, test run, or assertion could not be empirically validated.',
+      },
+      defaultConfiguration: {
+        level: 'error',
+      },
+    },
+    {
+      id: 'UPHELD002',
+      name: 'UnclaimedChange',
+      shortDescription: {
+        text: 'Unclaimed file modified or created',
+      },
+      fullDescription: {
+        text: 'A file was modified or created in git status but never claimed in the claims specification.',
+      },
+      defaultConfiguration: {
+        level: 'warning',
+      },
+    },
+  ];
+
+  const sarifResults: any[] = [];
+
+  for (const r of report.results) {
+    if (r.status === 'unmet') {
+      const result: any = {
+        ruleId: 'UPHELD001',
+        level: 'error',
+        message: {
+          text: r.details || `Unmet claim (${r.type}): ${r.claimSummary}. Observed: ${r.evidenceSummary}`,
+        },
+      };
+
+      if (r.claim && r.claim.type === 'file_written' && r.claim.path) {
+        result.locations = [
+          {
+            physicalLocation: {
+              artifactLocation: {
+                uri: r.claim.path,
+              },
+            },
+          },
+        ];
+      }
+
+      sarifResults.push(result);
+    } else if (r.status === 'unclaimed') {
+      const match = r.evidenceSummary.match(/unclaimed file written\/modified: (.+)$/);
+      const filePath = match ? match[1] : undefined;
+
+      const result: any = {
+        ruleId: 'UPHELD002',
+        level: 'warning',
+        message: {
+          text: r.details || r.evidenceSummary,
+        },
+      };
+
+      if (filePath) {
+        result.locations = [
+          {
+            physicalLocation: {
+              artifactLocation: {
+                uri: filePath,
+              },
+            },
+          },
+        ];
+      }
+
+      sarifResults.push(result);
+    }
+  }
+
+  const sarifLog = {
+    $schema: 'https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json',
+    version: '2.1.0',
+    runs: [
+      {
+        tool: {
+          driver: {
+            name: 'upheld',
+            version: '0.0.1',
+            informationUri: 'https://github.com/chuofringer/upheld',
+            rules,
+          },
+        },
+        results: sarifResults,
+      },
+    ],
+  };
+
+  return JSON.stringify(sarifLog, null, 2);
+}
+
+function escapeAnnotationValue(str: string): string {
+  return str.replace(/%/g, '%25').replace(/\r/g, '%0D').replace(/\n/g, '%0A').replace(/:/g, '%3A').replace(/,/g, '%2C');
+}
+
+function escapeAnnotationData(str: string): string {
+  return str.replace(/%/g, '%25').replace(/\r/g, '%0D').replace(/\n/g, '%0A');
+}
+
 function formatStatusLabel(status: string): string {
   switch (status) {
     case 'upheld':

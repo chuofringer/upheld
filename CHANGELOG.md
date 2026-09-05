@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- GitHub CI annotations output (`--format annotations` / `--annotations`) emitting workflow commands (`::error`, `::warning`) for unmet claims and unclaimed files.
+- SARIF v2.1.0 JSON output format (`--format sarif` / `--sarif`) for GitHub Code Scanning compatibility.
+- Format input in GitHub composite action (`action.yml`).
 - Thin-wedge core engine and CLI (`upheld verify`) for claims-vs-evidence verification.
 - Claim evaluators for `tests_pass{cmd,passed,failed,total}` and `file_written{path}`.
 - Test runner output parsers and auto-detection for `pytest`, `vitest`, and `jest`.
