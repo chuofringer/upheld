@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Upheld — Claims-vs-Evidence Verifier for AI Coding Agents</title>
+  <meta name="description" content="Claims, upheld. Done means shown. Deterministic claim verification for AI coding agents correlating prose against execution evidence.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Site Navigation -->
+  <header class="site-header">
+    <div class="container nav-wrapper">
+      <a href="#" class="brand-link" aria-label="Upheld Homepage">
+        <svg class="brand-logo-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <!-- Geometric verification shield / bracket monogram -->
+          <rect x="3" y="3" width="26" height="26" rx="6" stroke="currentColor" stroke-width="2" stroke-opacity="0.6"/>
+          <path d="M9 16.5L14 21.5L23 10.5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="brand-name">upheld</span>
+      </a>
+
+      <nav aria-label="Main Navigation">
+        <ul class="nav-links">
+          <li><a href="#how-it-works">How It Works</a></li>
+          <li><a href="#claim-types">Claim Types</a></li>
+          <li><a href="#demo">Audit Demo</a></li>
+          <li><a href="#features">Features</a></li>
+          <li><a href="#quickstart">Quickstart</a></li>
+          <li><a href="#faq">FAQ</a></li>
+          <li>
+            <a href="https://github.com/chuofringer/upheld" class="btn-github" target="_blank" rel="noopener noreferrer">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+              </svg>
+              <span>GitHub</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hero Section -->
+    <section class="hero-section">
+      <div class="container">
+        <div class="hero-grid">
+          <div class="hero-copy">
+            <div class="hero-tagline-badge">
+              <span class="badge-dot"></span>
+              <span>Claims, upheld. Done means shown.</span>
+            </div>
+            <h1 class="hero-title">Claims-vs-evidence verifier for AI coding agents.</h1>
+            <p class="hero-subtitle">
+              Stop trusting agent prose summaries. Upheld deterministically correlates agent claims against execution receipts, tool telemetry, diff records, and test passes.
+            </p>
+            <div class="hero-actions">
+              <a href="#quickstart" class="btn-primary">
+                <span>Run Locally</span>
+                <span class="mono">→</span>
+              </a>
+              <a href="https://github.com/chuofringer/upheld" class="btn-secondary" target="_blank" rel="noopener noreferrer">
+                <span>View Source on GitHub</span>
+              </a>
+            </div>
+          </div>
+
+          <div class="hero-visual">
+            <div class="terminal-window">
+              <div class="terminal-header">
+                <div class="terminal-dots">
+                  <div class="terminal-dot"></div>
+                  <div class="terminal-dot"></div>
+                  <div class="terminal-dot"></div>
+                </div>
+                <div class="terminal-title">upheld audit — session.json</div>
+              </div>
+              <div class="terminal-body">
+                <div class="terminal-line">
+                  <span class="terminal-prompt">$</span>
+                  <span class="text-secondary">upheld verify --transcript ./agent-session.json</span>
+                </div>
+
+                <div class="audit-entry upheld">
+                  <div class="audit-meta">
+                    <span class="claim-tag">[CLAIM: file_written]</span>
+                    <span class="verdict-badge upheld">UPHELD</span>
+                  </div>
+                  <div class="audit-text">"Created src/auth/jwt.rs with HMAC validation"</div>
+                  <div class="audit-evidence">Evidence: WriteTool invoked (148 lines) + AST check passed</div>
+                </div>
+
+                <div class="audit-entry refuted">
+                  <div class="audit-meta">
+                    <span class="claim-tag">[CLAIM: test_passed]</span>
+                    <span class="verdict-badge refuted">REFUTED</span>
+                  </div>
+                  <div class="audit-text">"Ran test suite; all 24 tests passed"</div>
+                  <div class="audit-evidence">Evidence: Process exit code 101 (2 assertions failed in jwt_test.rs)</div>
+                </div>
+
+                <div class="audit-entry unsub">
+                  <div class="audit-meta">
+                    <span class="claim-tag">[CLAIM: benchmark_hit]</span>
+                    <span class="verdict-badge unsub">UNSUBSTANTIATED</span>
+                  </div>
+                  <div class="audit-text">"Optimized latency down to 2ms"</div>
+                  <div class="audit-evidence">Evidence: No benchmark command executed during session</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- How It Works (3 Steps) -->
+    <section id="how-it-works" class="section">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-eyebrow">Architecture</div>
+          <h2 class="section-title">How Upheld Works in 3 Steps</h2>
+          <p class="section-desc">
+            Deterministic claim-receipt reconciliation designed specifically for autonomous agent loops.
+          </p>
+        </div>
+
+        <div class="steps-grid">
+          <div class="step-card">
+            <div class="step-number">01</div>
+            <h3 class="step-title">Ingest Telemetry</h3>
+            <p class="step-desc">
+              Captures structured transcripts: tool call arguments, stdout/stderr streams, process exit codes, and file mutation payloads from agent execution envelopes.
+            </p>
+            <div class="step-code-snippet">
+              // Ingests session transcript<br>
+              transcript: { tool_calls: [...], output: [...] }
+            </div>
+          </div>
+
+          <div class="step-card">
+            <div class="step-number">02</div>
+            <h3 class="step-title">Correlate Claims</h3>
+            <p class="step-desc">
+              Extracts semantic assertions from the agent's prose response and maps each assertion directly to its mandatory concrete evidence requirement.
+            </p>
+            <div class="step-code-snippet">
+              // Maps claim to evidence rule<br>
+              "fixed bug" ➔ requires: git_diff + test_run
+            </div>
+          </div>
+
+          <div class="step-card">
+            <div class="step-number">03</div>
+            <h3 class="step-title">Verify & Report</h3>
+            <p class="step-desc">
+              Evaluates whether each claim holds up against the empirical evidence. Outputs a structured audit manifest (Report mode by default; exits non-zero in <code>--strict</code>).
+            </p>
+            <div class="step-code-snippet">
+              // Verdict breakdown<br>
+              upheld: 8 | refuted: 1 | unsubstantiated: 0
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Claim Types Section -->
+    <section id="claim-types" class="section">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-eyebrow">Verification Rules</div>
+          <h2 class="section-title">Strict Evidence Standards by Claim Type</h2>
+          <p class="section-desc">
+            Passive assumptions do not count as proof. Every claim type enforces concrete verification rules.
+          </p>
+        </div>
+
+        <div class="claim-types-grid">
+          <div class="claim-type-card">
+            <div class="claim-type-header">
+              <span class="claim-type-title">file_written</span>
+              <span class="claim-type-rule">Write Event</span>
+            </div>
+            <p class="claim-type-desc">
+              Verifies the agent actually performed a file write or edit operation. Mere existence on disk is rejected as insufficient proof.
+            </p>
+            <div class="evidence-spec">
+              <span><strong>Required Evidence:</strong> Tool call payload or disk delta record with nonzero mutated bytes.</span>
+            </div>
+          </div>
+
+          <div class="claim-type-card">
+            <div class="claim-type-header">
+              <span class="claim-type-title">command_run</span>
+              <span class="claim-type-rule">Process Receipt</span>
+            </div>
+            <p class="claim-type-desc">
+              Validates that claimed terminal commands were executed within the current session runtime with timestamps and process records.
+            </p>
+            <div class="evidence-spec">
+              <span><strong>Required Evidence:</strong> Recorded execution envelope with command string and spawned PID.</span>
+            </div>
+          </div>
+
+          <div class="claim-type-card">
+            <div class="claim-type-header">
+              <span class="claim-type-title">test_passed</span>
+              <span class="claim-type-rule">Zero Exit + Suite Pass</span>
+            </div>
+            <p class="claim-type-desc">
+              Requires an exit code of 0 together with parsed test-runner summary counters. Masks and swallowed errors (<code>|| true</code>) are flagged.
+            </p>
+            <div class="evidence-spec">
+              <span><strong>Required Evidence:</strong> Exit code 0 + non-empty test suite stdout proving execution.</span>
+            </div>
+          </div>
+
+          <div class="claim-type-card">
+            <div class="claim-type-header">
+              <span class="claim-type-title">diff_applied</span>
+              <span class="claim-type-rule">Tree Mutation</span>
+            </div>
+            <p class="claim-type-desc">
+              Verifies that the file tree or target buffer changed according to the claimed patch or refactor specification.
+            </p>
+            <div class="evidence-spec">
+              <span><strong>Required Evidence:</strong> Git staging delta or AST transformation verification.</span>
+            </div>
+          </div>
+
+          <div class="claim-type-card">
+            <div class="claim-type-header">
+              <span class="claim-type-title">lint_clean</span>
+              <span class="claim-type-rule">Static Analysis</span>
+            </div>
+            <p class="claim-type-desc">
+              Validates claims like "no lint errors remain" against actual linter runs and zero-diagnostic outputs.
+            </p>
+            <div class="evidence-spec">
+              <span><strong>Required Evidence:</strong> Linter CLI invocation record with clean diagnostic buffer.</span>
+            </div>
+          </div>
+
+          <div class="claim-type-card">
+            <div class="claim-type-header">
+              <span class="claim-type-title">benchmark_hit</span>
+              <span class="claim-type-rule">Telemetry Proof</span>
+            </div>
+            <p class="claim-type-desc">
+              Checks quantitative performance claims ("improved throughput 3x") against captured benchmark logs.
+            </p>
+            <div class="evidence-spec">
+              <span><strong>Required Evidence:</strong> Benchmark run execution log with recorded numeric baseline comparison.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Demo Table Section -->
+    <section id="demo" class="section">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-eyebrow">Sample Audit Manifest</div>
+          <h2 class="section-title">Claims vs. Evidence in Action</h2>
+          <p class="section-desc">
+            A real-world inspection example illustrating how agent statements are reconciled against raw telemetry.
+          </p>
+        </div>
+
+        <div class="demo-table-wrapper">
+          <div class="demo-disclaimer-bar">
+            <span><strong>DEMO MANIFEST</strong> — Example verification dataset (mock telemetry for demonstration)</span>
+            <span class="demo-disclaimer-badge">AUDIT MODE: REPORT</span>
+          </div>
+
+          <table class="demo-table">
+            <thead>
+              <tr>
+                <th>Claim (Agent Prose)</th>
+                <th>Type</th>
+                <th>Required Evidence</th>
+                <th>Actual Evidence Observed</th>
+                <th>Verdict</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="claim-cell">
+                  <span class="claim-quote">"Created config/auth.json with default rate limits"</span>
+                </td>
+                <td class="mono claim-kind">file_written</td>
+                <td class="evidence-cell">WriteTool call with file payload</td>
+                <td class="evidence-cell">WriteTool logged: <code>config/auth.json</code> (24 lines written)</td>
+                <td><span class="verdict-badge upheld">UPHELD</span></td>
+              </tr>
+              <tr>
+                <td class="claim-cell">
+                  <span class="claim-quote">"Executed full test suite; 12 unit tests passing"</span>
+                </td>
+                <td class="mono claim-kind">test_passed</td>
+                <td class="evidence-cell">Test command with exit code 0 and summary</td>
+                <td class="evidence-cell"><code>cargo test</code> exited 0; stdout: <em>"12 passed; 0 failed"</em></td>
+                <td><span class="verdict-badge upheld">UPHELD</span></td>
+              </tr>
+              <tr>
+                <td class="claim-cell">
+                  <span class="claim-quote">"Fixed memory leak in connection pooling loop"</span>
+                </td>
+                <td class="mono claim-kind">diff_applied</td>
+                <td class="evidence-cell">AST patch or git diff in pool module</td>
+                <td class="evidence-cell">No file edits recorded in <code>src/pool.rs</code> during run</td>
+                <td><span class="verdict-badge refuted">REFUTED</span></td>
+              </tr>
+              <tr>
+                <td class="claim-cell">
+                  <span class="claim-quote">"Verified endpoint response time is under 15ms"</span>
+                </td>
+                <td class="mono claim-kind">benchmark_hit</td>
+                <td class="evidence-cell">Benchmark execution record</td>
+                <td class="evidence-cell">No benchmark command executed in session log</td>
+                <td><span class="verdict-badge unsub">UNSUBSTANTIATED</span></td>
+              </tr>
+              <tr>
+                <td class="claim-cell">
+                  <span class="claim-quote">"Resolved all ESLint warnings in frontend components"</span>
+                </td>
+                <td class="mono claim-kind">lint_clean</td>
+                <td class="evidence-cell">Linter run with 0 errors & 0 warnings</td>
+                <td class="evidence-cell"><code>eslint</code> run logged 3 unresolved <code>no-unused-vars</code> warnings</td>
+                <td><span class="verdict-badge refuted">REFUTED</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="section">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-eyebrow">Capabilities</div>
+          <h2 class="section-title">Built for Real Engineering Pipelines</h2>
+          <p class="section-desc">
+            Zero cloud lock-in, deterministic verification, and transparent reporting.
+          </p>
+        </div>
+
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon-wrapper">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              </svg>
+            </div>
+            <h3 class="feature-title">Local-First & Private</h3>
+            <p class="feature-desc">
+              Runs 100% locally on your workstation or CI runner. No transcripts, code, or telemetry are ever uploaded to third-party clouds.
+            </p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon-wrapper">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="4 17 10 11 4 5"/>
+                <line x1="12" y1="19" x2="20" y2="19"/>
+              </svg>
+            </div>
+            <h3 class="feature-title">Report Mode Default</h3>
+            <p class="feature-desc">
+              Generates clear, informative audit logs without blocking iteration. Review discrepancies when you need them.
+            </p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon-wrapper">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+            </div>
+            <h3 class="feature-title">Optional --strict CI Gate</h3>
+            <p class="feature-desc">
+              Enable <code>--strict</code> in GitHub Actions or pre-commit hooks to fail the build whenever an unsubstantiated or refuted claim is detected.
+            </p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon-wrapper">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                <line x1="8" y1="21" x2="16" y2="21"/>
+                <line x1="12" y1="17" x2="12" y2="21"/>
+              </svg>
+            </div>
+            <h3 class="feature-title">Agent Agnostic</h3>
+            <p class="feature-desc">
+              Supports standardized transcript formats from Claude Code, Cursor, MCP-compatible agents, and custom autonomous LLM loops.
+            </p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon-wrapper">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+                <polyline points="2 17 12 22 22 17"/>
+                <polyline points="2 12 12 17 22 12"/>
+              </svg>
+            </div>
+            <h3 class="feature-title">Write-Evidence Semantics</h3>
+            <p class="feature-desc">
+              <code>file_written</code> checks for genuine write operations and mutation receipts rather than trusting passive file existence.
+            </p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon-wrapper">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+              </svg>
+            </div>
+            <h3 class="feature-title">Deterministic Engine</h3>
+            <p class="feature-desc">
+              No LLM-as-a-judge unpredictability. Verification rules use pure structural logic, diff analysis, and execution receipts.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Quickstart Section -->
+    <section id="quickstart" class="section">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-eyebrow">Getting Started</div>
+          <h2 class="section-title">Local Build & Quickstart</h2>
+          <p class="section-desc">
+            Clone the repository and build from source. No global npm packages or closed services.
+          </p>
+        </div>
+
+        <div class="quickstart-box">
+          <div class="quickstart-notice">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-amber" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <div>
+              <strong>Open source & locally built:</strong> Upheld is not published to the global npm registry (do not run <code>npm i -g upheld</code>). Clone and build directly from source.
+            </div>
+          </div>
+
+          <div class="code-block-wrapper">
+            <div class="code-block-header">
+              <span>bash — Clone & Build Locally</span>
+              <span>sh</span>
+            </div>
+            <pre class="code-block"><code><span class="code-comment"># 1. Clone the repository</span>
+<span class="code-command">git</span> clone https://github.com/chuofringer/upheld.git
+<span class="code-command">cd</span> upheld
+
+<span class="code-comment"># 2. Build the verification binary</span>
+<span class="code-command">cargo</span> build <span class="code-flag">--release</span>
+
+<span class="code-comment"># 3. Verify an agent transcript in default (Report) mode</span>
+./target/release/upheld verify <span class="code-flag">--transcript</span> <span class="code-string">./session.json</span>
+
+<span class="code-comment"># 4. Optional: Run with --strict to fail CI on unverified claims</span>
+./target/release/upheld verify <span class="code-flag">--strict</span> <span class="code-flag">--transcript</span> <span class="code-string">./session.json</span></code></pre>
+          </div>
+
+          <div class="code-block-wrapper">
+            <div class="code-block-header">
+              <span>json — Sample Verification Output (Report Mode)</span>
+              <span>json</span>
+            </div>
+            <pre class="code-block"><code>{
+  <span class="code-string">"version"</span>: <span class="code-string">"1.0.0"</span>,
+  <span class="code-string">"session"</span>: <span class="code-string">"agent-run-2026-09-05"</span>,
+  <span class="code-string">"mode"</span>: <span class="code-string">"report"</span>,
+  <span class="code-string">"summary"</span>: {
+    <span class="code-string">"total_claims"</span>: 3,
+    <span class="code-string">"upheld"</span>: 2,
+    <span class="code-string">"refuted"</span>: 1,
+    <span class="code-string">"unsubstantiated"</span>: 0
+  },
+  <span class="code-string">"status"</span>: <span class="code-string">"passed_with_warnings"</span>
+}</code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ Honesty Notes -->
+    <section id="faq" class="section">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-eyebrow">Honesty & Transparency</div>
+          <h2 class="section-title">Frequently Asked Questions</h2>
+          <p class="section-desc">
+            Direct answers on architecture, deployment, and evidence rules.
+          </p>
+        </div>
+
+        <div class="faq-grid">
+          <div class="faq-card">
+            <h3 class="faq-question">
+              <span class="faq-q-mark">Q:</span>
+              <span>Is Upheld a hosted SaaS platform?</span>
+            </h3>
+            <div class="faq-answer">
+              <p>
+                No. Upheld is an open-source, local-first CLI tool and verification library. There are no hosted cloud dashboards, tracking beacons, or account logins.
+              </p>
+            </div>
+          </div>
+
+          <div class="faq-card">
+            <h3 class="faq-question">
+              <span class="faq-q-mark">Q:</span>
+              <span>Is there a global npm package?</span>
+            </h3>
+            <div class="faq-answer">
+              <p>
+                No. Upheld is not published to npm under a global name. Run it by cloning the GitHub repository and building from source locally.
+              </p>
+            </div>
+          </div>
+
+          <div class="faq-card">
+            <h3 class="faq-question">
+              <span class="faq-q-mark">Q:</span>
+              <span>How does file_written differ from file existence?</span>
+            </h3>
+            <div class="faq-answer">
+              <p>
+                A file simply being present on disk does not prove the agent modified or created it during the session. <code>file_written</code> requires direct evidence of a write tool call or file mutation event during that specific session.
+              </p>
+            </div>
+          </div>
+
+          <div class="faq-card">
+            <h3 class="faq-question">
+              <span class="faq-q-mark">Q:</span>
+              <span>What is Report mode vs. --strict mode?</span>
+            </h3>
+            <div class="faq-answer">
+              <p>
+                By default, Upheld runs in <strong>Report mode</strong>, outputting a clear diagnostic table and JSON manifest without terminating your workflow.
+              </p>
+              <p>
+                When passed <code>--strict</code>, Upheld exits with a non-zero code if any claim is refuted or unsubstantiated, suitable for CI gate enforcement.
+              </p>
+            </div>
+          </div>
+
+          <div class="faq-card">
+            <h3 class="faq-question">
+              <span class="faq-q-mark">Q:</span>
+              <span>Does Upheld use an LLM to evaluate claims?</span>
+            </h3>
+            <div class="faq-answer">
+              <p>
+                No. Upheld avoids non-deterministic LLM-as-a-judge scoring. Verification is computed via structural log analysis, exit code checks, AST diffs, and cryptographic hash comparisons.
+              </p>
+            </div>
+          </div>
+
+          <div class="faq-card">
+            <h3 class="faq-question">
+              <span class="faq-q-mark">Q:</span>
+              <span>Who builds Upheld?</span>
+            </h3>
+            <div class="faq-answer">
+              <p>
+                Upheld is an independent vibemapper project created to establish reliable ground truth for autonomous agent engineering workflows.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container footer-content">
+      <div class="footer-brand">
+        <div class="brand-link">
+          <svg class="brand-logo-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect x="3" y="3" width="26" height="26" rx="6" stroke="currentColor" stroke-width="2" stroke-opacity="0.6"/>
+            <path d="M9 16.5L14 21.5L23 10.5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span class="brand-name">upheld</span>
+        </div>
+        <div class="footer-tagline">Claims, upheld. Done means shown.</div>
+        <div class="footer-vibemapper">Anonymous Vibemapper Brand · Local-first Open Source</div>
+      </div>
+
+      <ul class="footer-links">
+        <li><a href="#how-it-works">How It Works</a></li>
+        <li><a href="#claim-types">Claim Types</a></li>
+        <li><a href="#quickstart">Quickstart</a></li>
+        <li><a href="https://github.com/chuofringer/upheld" target="_blank" rel="noopener noreferrer">GitHub Repository</a></li>
+      </ul>
+    </div>
+  </footer>
+
+</body>
+</html>
