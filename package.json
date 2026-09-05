@@ -1,0 +1,40 @@
+{
+  "name": "upheld",
+  "version": "0.1.0",
+  "description": "Claims vs evidence verifier for AI coding agents. Done means shown.",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "upheld": "bin/upheld.js"
+  },
+  "files": [
+    "dist",
+    "bin",
+    "scripts"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "node --test dist/**/*.test.js",
+    "test:src": "tsx --test src/**/*.test.ts",
+    "prepublishOnly": "npm run build"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "keywords": [
+    "ai-agents",
+    "claims",
+    "evidence",
+    "verification",
+    "cursor",
+    "claude",
+    "stop-hook"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.17.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}
