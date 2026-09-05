@@ -256,6 +256,12 @@ pre-commit:
 ### Claude Code Stop-Hook
 Upheld can run as a Claude Code Stop-hook to extract claims from the session transcript and verify them before concluding a session. See [`examples/claude-code-hook/`](./examples/claude-code-hook/) for setup and scripts.
 
+### Codex CLI Session Hook
+Extract and verify claims from Codex CLI sessions and tool events. See [`examples/codex-hook/`](./examples/codex-hook/) for adapters and setup.
+
+### OpenCode Session Hook
+Normalize tool events from OpenCode sessions into Upheld claims. See [`examples/opencode-hook/`](./examples/opencode-hook/) for adapters and setup.
+
 ### GitHub Actions
 To verify claims in CI, run the built CLI directly or invoke local verify steps:
 

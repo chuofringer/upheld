@@ -1,0 +1,23 @@
+[
+  {
+    "event": "tool_executed",
+    "toolName": "write_to_file",
+    "input": {
+      "filePath": "src/utils.ts"
+    },
+    "output": {
+      "success": true
+    }
+  },
+  {
+    "event": "tool_executed",
+    "toolName": "execute_command",
+    "input": {
+      "command": "pytest tests/"
+    },
+    "output": {
+      "exitCode": 0,
+      "stdout": "5 passed"
+    }
+  }
+]
