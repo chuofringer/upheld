@@ -96,6 +96,7 @@ export interface VerifyOptions {
   timeoutMs?: number;
   env?: Record<string, string | undefined>;
   sinceTimestamp?: number;
+  html?: string;
 }
 
 export interface GitHubCheckOptions {

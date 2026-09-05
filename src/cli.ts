@@ -2,7 +2,7 @@ import { readFileSync, appendFileSync, writeFileSync, watch as fsWatch } from 'n
 import { readFile } from 'node:fs/promises';
 import { parseClaimsJson, readClaimsFromFile } from './claims.js';
 import { verifyClaims } from './verifier.js';
-import { formatGitHubJobSummary, formatMarkdownSummary, formatTerminalTable, formatSarifReport } from './formatter.js';
+import { formatGitHubJobSummary, formatMarkdownSummary, formatTerminalTable, formatSarifReport, formatHtmlReport } from './formatter.js';
 import { initProject } from './init.js';
 import { postGitHubCheckRun } from './github.js';
 import { extractClaimsFromTranscript } from './extractor.js';
@@ -34,6 +34,7 @@ Verify Options:
   -w, --watch          Watch claims file for changes and re-verify automatically
   --strict             Exit with non-zero code if any claim is unmet (default: exit 0 in report mode)
   --format <type>      Output format: table (default), markdown, json, or sarif
+  --html <path>        Write self-contained HTML report to specified file path
   --cwd <path>         Working directory to evaluate claims in (default: current directory)
   --since <timestamp>  Evaluation window start timestamp (ms or ISO date) for file writes
   --no-unclaimed       Disable detection of unclaimed modified/untracked files
@@ -107,6 +108,7 @@ export async function runCli(args: string[] = process.argv.slice(2)): Promise<nu
   let enableGitHubCheck = false;
   let outFile: string | undefined;
   let dedupe = true;
+  let htmlReportPath: string | undefined;
 
   // Check if first positional arg is a command
   let startIndex = 0;
@@ -143,6 +145,8 @@ export async function runCli(args: string[] = process.argv.slice(2)): Promise<nu
       format = 'markdown';
     } else if (arg === '--sarif') {
       format = 'sarif';
+    } else if (arg === '--html') {
+      htmlReportPath = args[++i];
     } else if (arg === '--github-check') {
       enableGitHubCheck = true;
     } else if (arg === '--summary') {
@@ -369,6 +373,18 @@ export async function runCli(args: string[] = process.argv.slice(2)): Promise<nu
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       console.error(`Warning: Unexpected error posting GitHub check run: ${message}`);
+    }
+  }
+
+  // If HTML report output requested, write self-contained report to path
+  if (htmlReportPath) {
+    try {
+      const htmlContent = formatHtmlReport(report);
+      writeFileSync(htmlReportPath, htmlContent, 'utf-8');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(`Error: Failed to write HTML report to ${htmlReportPath}: ${message}`);
+      return 1;
     }
   }
 
