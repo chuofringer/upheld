@@ -1,0 +1,20 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-7.4.0, pluggy-1.2.0
+rootdir: /workspace
+collected 5 items
+
+tests/test_basic.py::test_one PASSED                                     [ 20%]
+tests/test_basic.py::test_two PASSED                                     [ 40%]
+tests/test_basic.py::test_three SKIPPED (unsupported OS)                 [ 60%]
+tests/test_basic.py::test_four FAILED                                    [ 80%]
+tests/test_basic.py::test_five PASSED                                    [100%]
+
+=================================== FAILURES ===================================
+__________________________________ test_four ___________________________________
+    def test_four():
+>       assert 1 == 2
+E       assert 1 == 2
+tests/test_basic.py:12: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_basic.py::test_four - assert 1 == 2
+=================== 1 failed, 3 passed, 1 skipped in 0.15s =====================

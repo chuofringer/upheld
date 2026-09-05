@@ -100,4 +100,26 @@ describe('Verifier Engine', () => {
     expect(report.results[0].status).toBe('unmet');
     expect(report.results[0].details).toContain('parser could not extract them from command output');
   });
+
+  it('flags discrepancies when claimed skipped mismatch observed skipped', async () => {
+    const claims = [
+      {
+        type: 'tests_pass' as const,
+        cmd: "node -e 'console.log(\"Tests 1 failed | 2 passed | 3 skipped (6)\"); process.exit(1);'",
+        passed: 2,
+        failed: 1,
+        skipped: 5, // Claimed 5 skipped, but actually 3
+        total: 6,
+      },
+    ];
+
+    const report = await verifyClaims(claims, {
+      cwd: resolve(__dirname, '..'),
+      detectUnclaimed: false,
+    });
+
+    expect(report.hasUnmet).toBe(true);
+    expect(report.results[0].status).toBe('unmet');
+    expect(report.results[0].details?.toLowerCase()).toContain('claimed 5 skipped but observed 3');
+  });
 });

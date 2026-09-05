@@ -1,0 +1,5 @@
+
+ Test Files  1 failed | 2 passed (3)
+      Tests  2 failed | 8 passed | 1 skipped (11)
+   Start at  22:00:00
+   Duration  1.20s (transform 45ms, setup 0ms, collect 100ms, tests 800ms, environment 0ms, prepare 50ms)

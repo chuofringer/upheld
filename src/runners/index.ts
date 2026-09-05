@@ -27,22 +27,23 @@ export interface RunTestOptions {
 export function parseOutputMetrics(output: string): {
   passed?: number;
   failed?: number;
+  skipped?: number;
   total?: number;
   framework?: 'pytest' | 'vitest' | 'jest' | 'generic';
 } {
-  const pytest = parsePytestOutput(output);
-  if (pytest.passed !== undefined || (pytest.total !== undefined && pytest.total > 0)) {
-    return { ...pytest, framework: 'pytest' };
-  }
-
   const vitest = parseVitestOutput(output);
-  if (vitest.passed !== undefined || (vitest.total !== undefined && vitest.total > 0)) {
+  if (vitest.passed !== undefined || vitest.failed !== undefined || vitest.skipped !== undefined || (vitest.total !== undefined && vitest.total > 0)) {
     return { ...vitest, framework: 'vitest' };
   }
 
   const jest = parseJestOutput(output);
-  if (jest.passed !== undefined || (jest.total !== undefined && jest.total > 0)) {
+  if (jest.passed !== undefined || jest.failed !== undefined || jest.skipped !== undefined || (jest.total !== undefined && jest.total > 0)) {
     return { ...jest, framework: 'jest' };
+  }
+
+  const pytest = parsePytestOutput(output);
+  if (pytest.passed !== undefined || pytest.failed !== undefined || pytest.skipped !== undefined || (pytest.total !== undefined && pytest.total > 0)) {
+    return { ...pytest, framework: 'pytest' };
   }
 
   return { framework: 'generic' };
@@ -106,7 +107,7 @@ export async function executeTestCommand(
       const durationMs = Date.now() - startTime;
       const combinedOutput = `${stdout}\n${stderr}`;
 
-      let parsedMetrics: { passed?: number; failed?: number; total?: number } = {};
+      let parsedMetrics: { passed?: number; failed?: number; skipped?: number; total?: number } = {};
       if (framework === 'pytest') {
         parsedMetrics = parsePytestOutput(combinedOutput);
       } else if (framework === 'vitest') {
@@ -127,6 +128,7 @@ export async function executeTestCommand(
         exitCode: code ?? 1,
         passed: parsedMetrics.passed,
         failed: parsedMetrics.failed,
+        skipped: parsedMetrics.skipped,
         total: parsedMetrics.total,
         framework,
         stdout,

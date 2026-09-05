@@ -1,0 +1,7 @@
+..sF.                                                                    [100%]
+=================================== FAILURES ===================================
+__________________________________ test_four ___________________________________
+tests/test_basic.py:12: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_basic.py::test_four - assert 1 == 2
+1 failed, 3 passed, 1 skipped in 0.08s
