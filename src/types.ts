@@ -75,3 +75,21 @@ export interface VerifyOptions {
   env?: Record<string, string | undefined>;
   sinceTimestamp?: number;
 }
+
+export interface GitHubCheckOptions {
+  token?: string;
+  repo?: string;
+  sha?: string;
+  apiUrl?: string;
+  checkName?: string;
+  fetchFn?: typeof fetch;
+}
+
+export interface GitHubCheckResult {
+  posted: boolean;
+  checkRunId?: number;
+  url?: string;
+  conclusion?: 'success' | 'failure' | 'neutral';
+  skippedReason?: string;
+  error?: string;
+}

@@ -1,8 +1,9 @@
-import { readFileSync, appendFileSync } from 'node:fs';
+import { appendFileSync } from 'node:fs';
 import { parseClaimsJson, readClaimsFromFile } from './claims.js';
 import { verifyClaims } from './verifier.js';
 import { formatGitHubJobSummary, formatMarkdownSummary, formatTerminalTable } from './formatter.js';
 import { initProject } from './init.js';
+import { postGitHubCheckRun } from './github.js';
 import { Claim, VerifyOptions } from './types.js';
 
 function printHelp(): void {
@@ -32,6 +33,7 @@ Verify Options:
   --no-unclaimed       Disable detection of unclaimed modified/untracked files
   --json               Shortcut for --format json
   --markdown           Shortcut for --format markdown
+  --github-check       Post/update a GitHub check run named "Upheld — Claims vs evidence" (no-op if GITHUB_TOKEN/GITHUB_SHA missing)
   --summary            Output GitHub Action job summary format
   --summary-file <f>   Append job summary to specified file (or $GITHUB_STEP_SUMMARY)
 
@@ -66,14 +68,13 @@ async function readStdin(): Promise<string> {
 }
 
 export async function runCli(args: string[] = process.argv.slice(2)): Promise<number> {
-  if (args.includes('-h') || args.includes('--help') || args.length === 0 && process.stdin.isTTY) {
+  if (args.includes('-h') || args.includes('--help') || (args.length === 0 && process.stdin.isTTY)) {
     printHelp();
     return 0;
   }
 
   if (args.includes('-v') || args.includes('--version')) {
     try {
-      // Version string
       console.log('upheld v0.0.1');
     } catch {
       console.log('0.0.1');
@@ -92,6 +93,7 @@ export async function runCli(args: string[] = process.argv.slice(2)): Promise<nu
   let detectUnclaimed = true;
   let summaryFile: string | undefined = process.env.GITHUB_STEP_SUMMARY;
   let writeSummary = false;
+  let enableGitHubCheck = false;
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
@@ -109,6 +111,8 @@ export async function runCli(args: string[] = process.argv.slice(2)): Promise<nu
       format = 'json';
     } else if (arg === '--markdown') {
       format = 'markdown';
+    } else if (arg === '--github-check') {
+      enableGitHubCheck = true;
     } else if (arg === '--summary') {
       format = 'markdown';
       writeSummary = true;
@@ -220,6 +224,23 @@ export async function runCli(args: string[] = process.argv.slice(2)): Promise<nu
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       console.error(`Warning: Failed to write GitHub step summary to ${summaryFile}: ${message}`);
+    }
+  }
+
+  if (enableGitHubCheck) {
+    try {
+      const checkResult = await postGitHubCheckRun(report);
+      if (checkResult.posted) {
+        if (format !== 'json') {
+          console.log(`GitHub Check Run posted: ${checkResult.url ?? `Check Run #${checkResult.checkRunId}`}`);
+        }
+      } else if (checkResult.error) {
+        console.error(`Warning: Failed to post GitHub check run: ${checkResult.error}`);
+      }
+      // If skipped due to missing tokens/env (e.g. running locally), gracefully no-op quietly
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(`Warning: Unexpected error posting GitHub check run: ${message}`);
     }
   }
 

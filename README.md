@@ -73,7 +73,9 @@ When executed, Upheld evaluates agent claims against on-disk and execution recei
 - **Empirical Re-run**: Re-runs claimed test commands (`pytest`, `vitest`, `jest`, or arbitrary shell commands) and compares parsed outputs (passed/failed/total counts and exit status) to what was claimed.
 - **File Artifact Verification**: Checks for write evidence that claimed file paths were created or modified during the run via git status (`M`, `A`, `??`) or modification time (`mtime`) against `--since`; pre-existing untouched files evaluate to unmet.
 - **Unclaimed Change Detection**: Identifies files modified or created in git that were never claimed by the agent.
-- **Harness Agnostic**: Evaluates JSON claims from any producer or agent workflow.
+- **Machine-Readable Output**: Emits structured JSON (`--format json` / `--json`) or Markdown (`--format markdown` / `--markdown`) for downstream tools.
+- **GitHub Check Run Integration**: Automatically posts or updates a Check Run named **"Upheld — Claims vs evidence"** when `GITHUB_TOKEN` and `GITHUB_SHA` are present (`--github-check`).
+- **Harness Agnostic**: Evaluates JSON claims from any producer or agent workflow (Claude Code, Cursor, Codex, OpenHands, Aider, custom CI/CD pipelines, or standalone CLIs).
 - **Report & Strict Modes**:
   - **Report Mode (default)**: Emits a structured Claims vs Evidence table and exits `0` for transparent observation.
   - **Strict Mode (`--strict`)**: Exits with a non-zero code if any claim is unmet or fails.
@@ -197,6 +199,13 @@ npx . verify path/to/claims.json
 cat claims.json | node dist/bin.js verify
 # or
 cat claims.json | npx . verify
+```
+
+### GitHub Check Run
+```bash
+node dist/bin.js verify --github-check claims.json
+# or
+npx . verify --github-check claims.json
 ```
 ---
 
