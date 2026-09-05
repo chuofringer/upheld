@@ -1,4 +1,4 @@
-export type ClaimType = 'tests_pass' | 'file_written';
+export type ClaimType = 'tests_pass' | 'file_written' | 'diff_tampering';
 
 export interface TestsPassClaim {
   type: 'tests_pass';
@@ -15,7 +15,13 @@ export interface FileWrittenClaim {
   description?: string;
 }
 
-export type Claim = TestsPassClaim | FileWrittenClaim;
+export interface DiffTamperingClaim {
+  type: 'diff_tampering';
+  description?: string;
+  base?: string;
+}
+
+export type Claim = TestsPassClaim | FileWrittenClaim | DiffTamperingClaim;
 
 export interface ClaimsDocument {
   version?: string;
@@ -23,6 +29,24 @@ export interface ClaimsDocument {
 }
 
 export type VerificationStatus = 'upheld' | 'unmet' | 'unclaimed';
+
+export interface TamperingFinding {
+  ruleId: string;
+  pattern: string;
+  file: string;
+  line?: number;
+  snippet?: string;
+  reason: string;
+}
+
+export interface LintDiffResult {
+  tampered: boolean;
+  findings: TamperingFinding[];
+  diffSummary: {
+    filesScanned: number;
+    findingsCount: number;
+  };
+}
 
 export interface TestResultMetrics {
   cmd: string;
@@ -69,6 +93,16 @@ export interface VerifyOptions {
   cwd?: string;
   strict?: boolean;
   detectUnclaimed?: boolean;
+  lintDiff?: boolean;
+  diffBase?: string;
+  patch?: string;
   timeoutMs?: number;
   env?: Record<string, string | undefined>;
+}
+
+export interface LintDiffOptions {
+  cwd?: string;
+  base?: string;
+  patch?: string;
+  strict?: boolean;
 }

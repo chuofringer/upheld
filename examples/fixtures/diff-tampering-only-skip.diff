@@ -1,0 +1,18 @@
+diff --git a/tests/math.test.ts b/tests/math.test.ts
+index 1234567..89abcde 100644
+--- a/tests/math.test.ts
++++ b/tests/math.test.ts
+@@ -10,7 +10,7 @@ describe('math operations', () => {
+   it('adds numbers correctly', () => {
+     expect(add(1, 2)).toBe(3);
+   });
+
+-  it('handles division edge cases', () => {
++  it.only('handles division edge cases', () => {
+     expect(divide(10, 2)).toBe(5);
+   });
++
++  xit('handles complex multiplication', () => {
++    expect(multiply(3, 4)).toBe(12);
++  });
+ });

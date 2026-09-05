@@ -3,6 +3,8 @@ export * from './claims.js';
 export * from './checker.js';
 export * from './verifier.js';
 export * from './formatter.js';
+export * from './linter.js';
+export * from './git.js';
 export * from './runners/index.js';
 export * from './runners/pytest.js';
 export * from './runners/vitest.js';

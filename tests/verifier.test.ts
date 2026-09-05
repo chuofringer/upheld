@@ -58,4 +58,52 @@ describe('Verifier Engine', () => {
     expect(report.results[0].status).toBe('unmet');
     expect(report.results[0].details?.toLowerCase()).toContain('claimed 10 passed but observed 2');
   });
+
+  it('evaluates diff_tampering claim type as upheld for clean patch', async () => {
+    const cleanDiff = `diff --git a/src/app.ts b/src/app.ts
+--- a/src/app.ts
++++ b/src/app.ts
+@@ -1,2 +1,2 @@
+-const x = 1;
++const x = 2;
+`;
+    const claims = [
+      {
+        type: 'diff_tampering' as const,
+      },
+    ];
+
+    const report = await verifyClaims(claims, {
+      patch: cleanDiff,
+      detectUnclaimed: false,
+    });
+
+    expect(report.hasUnmet).toBe(false);
+    expect(report.results[0].status).toBe('upheld');
+    expect(report.results[0].evidenceSummary).toContain('clean diff');
+  });
+
+  it('evaluates diff_tampering claim type as unmet for tampered patch', async () => {
+    const tamperedDiff = `diff --git a/tests/test_main.py b/tests/test_main.py
+--- a/tests/test_main.py
++++ b/tests/test_main.py
+@@ -10,3 +10,3 @@ def test_feature():
+-    assert calculate(10) == 20
++    assert True
+`;
+    const claims = [
+      {
+        type: 'diff_tampering' as const,
+      },
+    ];
+
+    const report = await verifyClaims(claims, {
+      patch: tamperedDiff,
+      detectUnclaimed: false,
+    });
+
+    expect(report.hasUnmet).toBe(true);
+    expect(report.results[0].status).toBe('unmet');
+    expect(report.results[0].details).toContain('assert True');
+  });
 });

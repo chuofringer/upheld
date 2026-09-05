@@ -1,0 +1,22 @@
+diff --git a/src/utils.ts b/src/utils.ts
+index 1111111..2222222 100644
+--- a/src/utils.ts
++++ b/src/utils.ts
+@@ -1,3 +1,3 @@
+ export function add(a: number, b: number): number {
+-  return 0;
++  return a + b;
+ }
+diff --git a/tests/utils.test.ts b/tests/utils.test.ts
+index 3333333..4444444 100644
+--- a/tests/utils.test.ts
++++ b/tests/utils.test.ts
+@@ -1,5 +1,5 @@
+ import { describe, it, expect } from 'vitest';
+ import { add } from '../src/utils.js';
+
+ describe('add', () => {
+   it('adds two numbers', () => {
+     expect(add(2, 3)).toBe(5);
+   });
+ });

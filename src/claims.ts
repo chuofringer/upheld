@@ -10,6 +10,9 @@ export function isClaim(obj: unknown): obj is Claim {
   if (o.type === 'file_written' && typeof o.path === 'string') {
     return true;
   }
+  if (o.type === 'diff_tampering') {
+    return true;
+  }
   return false;
 }
 

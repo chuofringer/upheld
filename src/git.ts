@@ -3,6 +3,22 @@ import { promisify } from 'node:util';
 
 const execAsync = promisify(exec);
 
+export async function getGitDiff(cwd: string, base?: string): Promise<string> {
+  try {
+    const cmd = base ? `git diff ${base}` : 'git diff HEAD';
+    const { stdout } = await execAsync(cmd, { cwd, maxBuffer: 10 * 1024 * 1024 });
+    return stdout;
+  } catch {
+    // If git diff HEAD fails (e.g. initial commit repo), try git diff without args
+    try {
+      const { stdout } = await execAsync('git diff', { cwd, maxBuffer: 10 * 1024 * 1024 });
+      return stdout;
+    } catch {
+      return '';
+    }
+  }
+}
+
 export async function detectUntrackedAndModifiedFiles(cwd: string): Promise<string[]> {
   try {
     const { stdout } = await execAsync('git status --porcelain', { cwd });

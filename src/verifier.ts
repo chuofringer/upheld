@@ -1,7 +1,8 @@
 import { Claim, VerifyOptions, VerifyReport, VerificationResult } from './types.js';
 import { executeTestCommand } from './runners/index.js';
 import { checkFileExists } from './checker.js';
-import { detectUntrackedAndModifiedFiles } from './git.js';
+import { detectUntrackedAndModifiedFiles, getGitDiff } from './git.js';
+import { lintDiffString } from './linter.js';
 
 export async function verifyClaims(
   claims: Claim[],
@@ -92,7 +93,48 @@ export async function verifyClaims(
         evidenceSummary,
         details: evidence.exists ? undefined : `File '${claim.path}' was not found`,
       });
+    } else if (claim.type === 'diff_tampering') {
+      const claimSummary = claim.description || (claim.base ? `diff against ${claim.base} free of tampering` : 'diff free of tampering');
+      const diffText = options.patch !== undefined ? options.patch : await getGitDiff(cwd, claim.base ?? options.diffBase);
+      const lintRes = lintDiffString(diffText);
+      const evidenceSummary = lintRes.tampered
+        ? `${lintRes.findings.length} tampering pattern(s) detected`
+        : `clean diff (${lintRes.diffSummary.filesScanned} file(s) scanned)`;
+
+      results.push({
+        id,
+        type: 'diff_tampering',
+        status: lintRes.tampered ? 'unmet' : 'upheld',
+        claim,
+        claimSummary,
+        evidenceSummary,
+        details: lintRes.tampered
+          ? lintRes.findings.map((f) => `${f.file}${f.line ? `:${f.line}` : ''}: ${f.reason} [${f.snippet || f.ruleId}]`).join('; ')
+          : undefined,
+      });
     }
+  }
+
+  // If lintDiff option is enabled, run diff tamper checking as an automatic check
+  if (options.lintDiff) {
+    const diffText = options.patch !== undefined ? options.patch : await getGitDiff(cwd, options.diffBase);
+    const lintRes = lintDiffString(diffText);
+    const id = `lint-diff-${results.length + 1}`;
+    const claimSummary = options.diffBase ? `diff against ${options.diffBase} free of tampering` : 'diff free of tampering';
+    const evidenceSummary = lintRes.tampered
+      ? `${lintRes.findings.length} tampering pattern(s) detected`
+      : `clean diff (${lintRes.diffSummary.filesScanned} file(s) scanned)`;
+
+    results.push({
+      id,
+      type: 'diff_tampering',
+      status: lintRes.tampered ? 'unmet' : 'upheld',
+      claimSummary,
+      evidenceSummary,
+      details: lintRes.tampered
+        ? lintRes.findings.map((f) => `${f.file}${f.line ? `:${f.line}` : ''}: ${f.reason} [${f.snippet || f.ruleId}]`).join('; ')
+        : undefined,
+    });
   }
 
   // Detect unclaimed modified/untracked files if enabled

@@ -38,4 +38,47 @@ describe('CLI Integration', () => {
     ]);
     expect(code).toBe(1);
   });
+
+  it('runs upheld lint-diff on clean diff in report mode (code 0)', async () => {
+    const code = await runCli([
+      'lint-diff',
+      '--patch',
+      resolve(fixturesDir, 'diff-clean.diff'),
+    ]);
+    expect(code).toBe(0);
+  });
+
+  it('runs upheld lint-diff on tampered diff in report mode (code 0)', async () => {
+    const code = await runCli([
+      'lint-diff',
+      '--patch',
+      resolve(fixturesDir, 'diff-tampering-only-skip.diff'),
+    ]);
+    expect(code).toBe(0);
+  });
+
+  it('runs upheld lint-diff --strict on tampered diff and exits non-zero (code 1)', async () => {
+    const code = await runCli([
+      'lint-diff',
+      '--strict',
+      '--patch',
+      resolve(fixturesDir, 'diff-tampering-weakened-deleted.diff'),
+    ]);
+    expect(code).toBe(1);
+  });
+
+  it('runs upheld verify --lint-diff with patch option and flags tampering as UNMET in strict mode', async () => {
+    const code = await runCli([
+      'verify',
+      '--strict',
+      resolve(fixturesDir, 'claims-upheld.json'),
+      '--lint-diff',
+      '--patch',
+      resolve(fixturesDir, 'diff-tampering-only-skip.diff'),
+      '--cwd',
+      resolve(__dirname, '..'),
+      '--no-unclaimed',
+    ]);
+    expect(code).toBe(1);
+  });
 });
