@@ -38,6 +38,7 @@ describe('Formatters', () => {
       unclaimed: 1,
     },
     hasUnmet: true,
+    hasUnclaimed: true,
   };
 
   it('formats terminal table output', () => {

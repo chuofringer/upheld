@@ -17,6 +17,7 @@ Agents often claim they performed tasks, passed test suites, or wrote specific f
 - **Report & Strict Modes**:
   - **Report Mode (default)**: Emits a structured Claims vs Evidence table and exits `0` for transparent observation.
   - **Strict Mode (`--strict`)**: Exits with a non-zero code if any claim is unmet or fails.
+  - **Strict Unclaimed Mode (`--strict-unclaimed`)**: Exits with a non-zero code if any working-tree change is not covered by a `file_written` claim.
 - **GitHub Actions & Job Summary**: Automatically renders Markdown job summaries in `$GITHUB_STEP_SUMMARY`.
 - **Lightweight & Honest**: Minimal footprint, zero external bloat, Node 20+.
 
@@ -73,6 +74,7 @@ cat claims.json | upheld verify
 
 ### Options
 - `--strict`: Exit non-zero if any claim is unmet.
+- `--strict-unclaimed`: Exit non-zero if any unclaimed git working-tree changes (modified/added/untracked) are detected.
 - `--format <table|markdown|json>`: Choose output format (`--json` and `--markdown` are shortcuts).
 - `--cwd <dir>`: Set working directory for evaluation.
 - `--no-unclaimed`: Disable git status unclaimed file detection.

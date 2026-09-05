@@ -134,5 +134,6 @@ export async function verifyClaims(
       unclaimed: unclaimedCount,
     },
     hasUnmet: unmetCount > 0,
+    hasUnclaimed: unclaimedCount > 0,
   };
 }

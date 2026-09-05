@@ -63,11 +63,13 @@ export interface VerifyReport {
     unclaimed: number;
   };
   hasUnmet: boolean;
+  hasUnclaimed: boolean;
 }
 
 export interface VerifyOptions {
   cwd?: string;
   strict?: boolean;
+  strictUnclaimed?: boolean;
   detectUnclaimed?: boolean;
   timeoutMs?: number;
   env?: Record<string, string | undefined>;

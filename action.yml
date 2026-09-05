@@ -18,6 +18,10 @@ inputs:
     description: 'Whether to fail the step if any claim is unmet (true/false)'
     required: false
     default: 'false'
+  strict-unclaimed:
+    description: 'Whether to fail the step if any unclaimed working tree change is detected (true/false)'
+    required: false
+    default: 'false'
   working-directory:
     description: 'Working directory for verification'
     required: false
@@ -58,12 +62,16 @@ runs:
       working-directory: ${{ inputs.working-directory }}
       env:
         STRICT: ${{ inputs.strict }}
+        STRICT_UNCLAIMED: ${{ inputs.strict-unclaimed }}
         CLAIMS_FILE: ${{ inputs.claims-file }}
         CLAIMS_JSON: ${{ inputs.claims-json }}
       run: |
         STRICT_FLAG=""
         if [ "$STRICT" = "true" ]; then
           STRICT_FLAG="--strict"
+        fi
+        if [ "$STRICT_UNCLAIMED" = "true" ]; then
+          STRICT_FLAG="$STRICT_FLAG --strict-unclaimed"
         fi
 
         if [ -n "$CLAIMS_JSON" ]; then

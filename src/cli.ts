@@ -15,6 +15,7 @@ Usage:
 
 Options:
   --strict             Exit with non-zero code if any claim is unmet (default: exit 0 in report mode)
+  --strict-unclaimed   Exit with non-zero code if any unclaimed changes are detected
   --format <type>      Output format: table (default), markdown, or json
   --cwd <path>         Working directory to evaluate claims in (default: current directory)
   --no-unclaimed       Disable detection of unclaimed modified/untracked files
@@ -70,6 +71,7 @@ export async function runCli(args: string[] = process.argv.slice(2)): Promise<nu
   let command = 'verify';
   let fileArg: string | undefined;
   let strict = false;
+  let strictUnclaimed = false;
   let format: 'table' | 'markdown' | 'json' = 'table';
   let cwd = process.cwd();
   let detectUnclaimed = true;
@@ -82,6 +84,8 @@ export async function runCli(args: string[] = process.argv.slice(2)): Promise<nu
       command = 'verify';
     } else if (arg === '--strict') {
       strict = true;
+    } else if (arg === '--strict-unclaimed') {
+      strictUnclaimed = true;
     } else if (arg === '--json') {
       format = 'json';
     } else if (arg === '--markdown') {
@@ -138,6 +142,7 @@ export async function runCli(args: string[] = process.argv.slice(2)): Promise<nu
   const options: VerifyOptions = {
     cwd,
     strict,
+    strictUnclaimed,
     detectUnclaimed,
   };
 
@@ -163,6 +168,10 @@ export async function runCli(args: string[] = process.argv.slice(2)): Promise<nu
   }
 
   if (strict && report.hasUnmet) {
+    return 1;
+  }
+
+  if (strictUnclaimed && report.hasUnclaimed) {
     return 1;
   }
 
