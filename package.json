@@ -1,0 +1,39 @@
+{
+  "name": "upheld",
+  "version": "0.1.0",
+  "description": "Claims vs evidence verifier for AI coding agents. Done means shown.",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "upheld": "dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prepare": "npm run build"
+  },
+  "keywords": [
+    "claims",
+    "evidence",
+    "verifier",
+    "ai-agents",
+    "ledger",
+    "receipts",
+    "audit"
+  ],
+  "author": "Vibe Mapper",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^22.13.0",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.5"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
