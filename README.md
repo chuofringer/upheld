@@ -120,6 +120,43 @@ Add Upheld to your CI workflow using our composite action:
 
 ---
 
+## Benchmark: Upheld vs. "Trust the Agent"
+
+Upheld provides a fixture benchmark script comparing empirical claim verification against blind acceptance ("trust the agent"). This serves as our dogfood metric toward our target validation goal of detecting ≥3% contradicted claims in agent workflows.
+
+Run the benchmark:
+
+```bash
+npm run benchmark
+# or directly
+node --loader tsx scripts/benchmark-false-claims.ts
+```
+
+### Benchmark Results (Corpus Fixtures)
+
+```
+Upheld — False-Claim Benchmark (Upheld vs. "Trust the Agent")
+================================================================================
+
+Fixture / Strategy                |  Strategy           |  Claims  |  Upheld  |  Unmet  |  Time (ms)
+----------------------------------+---------------------+----------+----------+---------+-----------
+claims-upheld.json [Trust Agent]  |  Trust Agent        |  3       |  3       |  0      |  0.0 ms   
+claims-upheld.json [Upheld]       |  Upheld (Verified)  |  3       |  3       |  0      |  24.3 ms  
+claims-unmet.json [Trust Agent]   |  Trust Agent        |  2       |  2       |  0      |  0.0 ms   
+claims-unmet.json [Upheld]        |  Upheld (Verified)  |  2       |  0       |  2      |  20.6 ms  
+
+Benchmark Summary:
+  Total Fixture Cases:          2
+  Total Claims Evaluated:       5
+  Unmet Claims Caught (Upheld): 2 / 5
+  Unmet Claims Caught (Trust):  0 / 5 (Blind acceptance)
+  Total Benchmark Duration:     45.5 ms
+```
+
+> **Note:** The metrics above reflect strictly deterministic evaluations of test corpus fixtures (`examples/fixtures/`).
+
+---
+
 ## Development
 
 ```bash

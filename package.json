@@ -28,6 +28,7 @@
     "watch": "tsc --watch",
     "test": "vitest run",
     "test:watch": "vitest",
+    "benchmark": "tsx scripts/benchmark-false-claims.ts",
     "prepublishOnly": "npm run build"
   },
   "keywords": [
@@ -41,6 +42,7 @@
   ],
   "devDependencies": {
     "@types/node": "^22.13.0",
+    "tsx": "^4.19.2",
     "typescript": "^5.7.3",
     "vitest": "^3.0.5"
   }
