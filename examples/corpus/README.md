@@ -14,9 +14,9 @@ This directory contains benchmark and test fixtures inspired by common failure m
 | `04-exit-zero-with-failures` | Swallowed Exit Code | `unmet` | Command exits with status 0, but stdout contains test failures parsed by framework metrics. |
 | `05-nonzero-exit-crash` | Crashed Test Suite | `unmet` | Unhandled error causes test runner process to exit with non-zero code. |
 | `06-empty-test-suite-or-filter-miss` | Filter Miss / Empty Suite | `unmet` | Test runner pattern matches zero tests while agent claims tests ran and passed. |
-| `07-unclaimed-side-effects` | Unclaimed Modifications | `upheld` (claims) / `unclaimed` (files) | Explicit claims match, but untracked workspace side-effects can be audited. |
+| `07-unclaimed-side-effects` | Unclaimed Modifications | `upheld` (claims) / `unclaimed` (files) | Explicit claims match with write evidence; untracked workspace side-effects flagged via unclaimed change detection. |
 | `08-pytest-collection-error` | Pytest Collection Error | `unmet` | Pytest fixture/collection error is parsed and flagged against false passing claims. |
-| `09-fully-upheld-verification` | Baseline Upheld | `upheld` | All claimed files exist and test metrics match runner execution with zero failures. |
+| `09-fully-upheld-verification` | Baseline Upheld | `upheld` | Claimed files verified with write evidence; test metrics match runner execution with zero failures. |
 | `10-multi-claim-partial-failure` | Compound Multi-Claim | `unmet` | Mixed batch of successful claims, phantom files, and failing test commands. |
 
 ## Running the Corpus
