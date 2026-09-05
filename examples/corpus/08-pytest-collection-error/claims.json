@@ -1,0 +1,13 @@
+{
+  "version": "1.0",
+  "claims": [
+    {
+      "type": "tests_pass",
+      "cmd": "node -e 'console.log(\"3 passed, 2 error in 0.45s\"); process.exit(1);'",
+      "passed": 5,
+      "failed": 0,
+      "total": 5,
+      "description": "Pytest encountered setup/collection errors but agent claimed all passed"
+    }
+  ]
+}

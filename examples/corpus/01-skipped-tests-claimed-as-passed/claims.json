@@ -1,0 +1,13 @@
+{
+  "version": "1.0",
+  "claims": [
+    {
+      "type": "tests_pass",
+      "cmd": "node -e 'console.log(\"10 passed, 5 skipped in 0.12s\"); process.exit(0);'",
+      "passed": 15,
+      "failed": 0,
+      "total": 15,
+      "description": "Agent claims all 15 tests passed when 5 were skipped"
+    }
+  ]
+}

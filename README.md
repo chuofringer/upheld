@@ -154,6 +154,16 @@ npm run build
 npm test
 ```
 
+## False-Completion Corpus
+
+Upheld includes a curated fixture corpus of common false-completion patterns exhibited by coding agents (skipped tests, phantom file writes, inflated pass counts, swallowed exit codes).
+
+See [`examples/corpus/`](./examples/corpus/) and run the corpus validation suite:
+
+```bash
+npm run corpus
+```
+
 ---
 
 ## License
