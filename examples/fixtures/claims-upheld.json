@@ -3,21 +3,16 @@
   "claims": [
     {
       "type": "file_written",
-      "path": "README.md",
-      "description": "Project documentation"
-    },
-    {
-      "type": "file_written",
-      "path": "package.json",
-      "description": "NPM package definition"
+      "path": "examples/sample-project/src/math.ts",
+      "description": "Sample math module"
     },
     {
       "type": "tests_pass",
-      "cmd": "node -e 'console.log(\"Tests 2 passed (2)\"); process.exit(0);'",
+      "cmd": "npx vitest run --config examples/sample-project/vitest.config.ts",
       "passed": 2,
       "failed": 0,
       "total": 2,
-      "description": "Passing test suite"
+      "description": "Passing test suite for sample project"
     }
   ]
 }

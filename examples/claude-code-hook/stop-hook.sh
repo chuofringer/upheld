@@ -17,4 +17,4 @@ fi
 echo "🔍 Upheld: Verifying agent claims vs evidence..."
 
 # Run upheld verify in report mode (exit 0) or strict mode (--strict)
-npx upheld verify "$CLAIMS_FILE"
+npx . verify "$CLAIMS_FILE"

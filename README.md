@@ -37,7 +37,7 @@ Validates that running a test command passes and matches claimed metrics:
 ```
 
 ### 2. `file_written`
-Validates that a file was created or modified on disk:
+Validates that a file was created or modified on disk during the run (verified via git status or `--since` window):
 ```json
 {
   "type": "file_written",
@@ -47,12 +47,31 @@ Validates that a file was created or modified on disk:
 
 ---
 
-## Installation
+## Installation & Getting Started
+
+> **Note**: Upheld is currently in active development. NPM package publishing is planned for a future release. For now, run Upheld directly from source or via local build.
+
+### Local Setup & Build
 
 ```bash
-npm install -g upheld
-# or locally
-npm install --save-dev upheld
+# Clone the repository
+git clone https://github.com/chuofringer/upheld.git
+cd upheld
+
+# Install dependencies and build
+npm install && npm run build
+```
+
+### Running Upheld
+
+Run the built CLI directly with Node:
+```bash
+node dist/bin.js verify path/to/claims.json
+```
+
+Or invoke via npx within the local repository:
+```bash
+npx . verify path/to/claims.json
 ```
 
 Requirements: Node.js >= 20.0.0
@@ -63,18 +82,23 @@ Requirements: Node.js >= 20.0.0
 
 ### Verify Claims from a File
 ```bash
-upheld verify path/to/claims.json
+node dist/bin.js verify path/to/claims.json
+# or
+npx . verify path/to/claims.json
 ```
 
 ### Verify Claims via Standard Input
 ```bash
-cat claims.json | upheld verify
+cat claims.json | node dist/bin.js verify
+# or
+cat claims.json | npx . verify
 ```
 
 ### Options
 - `--strict`: Exit non-zero if any claim is unmet.
 - `--format <table|markdown|json>`: Choose output format (`--json` and `--markdown` are shortcuts).
 - `--cwd <dir>`: Set working directory for evaluation.
+- `--since <timestamp>`: Evaluation window start timestamp (ms or ISO date) for file writes.
 - `--no-unclaimed`: Disable git status unclaimed file detection.
 - `--summary`: Output GitHub Action job summary format.
 

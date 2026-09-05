@@ -53,4 +53,4 @@ When concluding a task, write your empirical claims to `.claude/claims.json`:
 ### 3. Execution & Behavior
 
 - **Report Mode (Default)**: Prints the claims-vs-evidence table and always exits `0`. Claude completes the session with transparent visibility into what was proven.
-- **Strict Mode (`--strict`)**: Set `npx upheld verify --strict "$CLAIMS_FILE"` in the hook. If any claim fails or is unmet, the hook exits non-zero, prompting the agent to self-correct before finishing.
+- **Strict Mode (`--strict`)**: Set `npx . verify --strict "$CLAIMS_FILE"` (or `node dist/bin.js verify --strict "$CLAIMS_FILE"`) in the hook. If any claim fails or is unmet, the hook exits non-zero, prompting the agent to self-correct before finishing.

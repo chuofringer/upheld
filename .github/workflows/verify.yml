@@ -22,4 +22,4 @@ jobs:
 
       - name: Verify self claims
         run: |
-          node ./dist/bin.js verify examples/fixtures/claims-upheld.json
+          node ./dist/bin.js verify examples/fixtures/claims-upheld.json --since 0

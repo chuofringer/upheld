@@ -17,6 +17,7 @@ Options:
   --strict             Exit with non-zero code if any claim is unmet (default: exit 0 in report mode)
   --format <type>      Output format: table (default), markdown, or json
   --cwd <path>         Working directory to evaluate claims in (default: current directory)
+  --since <timestamp>  Evaluation window start timestamp (ms or ISO date) for file writes
   --no-unclaimed       Disable detection of unclaimed modified/untracked files
   --json               Shortcut for --format json
   --markdown           Shortcut for --format markdown
@@ -72,6 +73,7 @@ export async function runCli(args: string[] = process.argv.slice(2)): Promise<nu
   let strict = false;
   let format: 'table' | 'markdown' | 'json' = 'table';
   let cwd = process.cwd();
+  let sinceTimestamp: number | undefined;
   let detectUnclaimed = true;
   let summaryFile: string | undefined = process.env.GITHUB_STEP_SUMMARY;
   let writeSummary = false;
@@ -104,6 +106,20 @@ export async function runCli(args: string[] = process.argv.slice(2)): Promise<nu
       }
     } else if (arg === '--cwd') {
       cwd = args[++i];
+    } else if (arg === '--since') {
+      const val = args[++i];
+      const parsedNum = Number(val);
+      if (!isNaN(parsedNum) && parsedNum > 0) {
+        sinceTimestamp = parsedNum;
+      } else {
+        const parsedDate = Date.parse(val);
+        if (!isNaN(parsedDate)) {
+          sinceTimestamp = parsedDate;
+        } else {
+          console.error(`Invalid --since value: ${val}`);
+          return 1;
+        }
+      }
     } else if (!arg.startsWith('-')) {
       fileArg = arg;
     }
@@ -139,6 +155,7 @@ export async function runCli(args: string[] = process.argv.slice(2)): Promise<nu
     cwd,
     strict,
     detectUnclaimed,
+    sinceTimestamp,
   };
 
   const report = await verifyClaims(claims, options);

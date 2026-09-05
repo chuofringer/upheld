@@ -1,6 +1,6 @@
 import { Claim, VerifyOptions, VerifyReport, VerificationResult } from './types.js';
 import { executeTestCommand } from './runners/index.js';
-import { checkFileExists } from './checker.js';
+import { checkFileEvidence } from './checker.js';
 import { detectUntrackedAndModifiedFiles } from './git.js';
 
 export async function verifyClaims(
@@ -44,6 +44,22 @@ export async function verifyClaims(
         details = `Command exited with non-zero code ${execution.exitCode}`;
       }
 
+      // Check if claims included counts that could not be extracted from output
+      const countsClaimed = claim.passed !== undefined || claim.failed !== undefined || claim.total !== undefined;
+      const countsMissing = (claim.passed !== undefined && execution.passed === undefined) ||
+                            (claim.failed !== undefined && execution.failed === undefined) ||
+                            (claim.total !== undefined && execution.total === undefined);
+
+      if (countsClaimed && countsMissing) {
+        upheld = false;
+        const missingFields: string[] = [];
+        if (claim.passed !== undefined && execution.passed === undefined) missingFields.push('passed');
+        if (claim.failed !== undefined && execution.failed === undefined) missingFields.push('failed');
+        if (claim.total !== undefined && execution.total === undefined) missingFields.push('total');
+        const reason = `Claim specified test counts (${missingFields.join(', ')}), but parser could not extract them from command output`;
+        details = details ? `${details}; ${reason}` : reason;
+      }
+
       if (claim.passed !== undefined && execution.passed !== undefined && execution.passed !== claim.passed) {
         upheld = false;
         details = details
@@ -78,19 +94,34 @@ export async function verifyClaims(
       claimedFilePaths.add(claim.path);
       const claimSummary = `path: ${claim.path}`;
 
-      const evidence = await checkFileExists(claim.path, cwd);
-      const evidenceSummary = evidence.exists
-        ? `exists (size: ${evidence.sizeBytes ?? 0} B)`
-        : 'does not exist';
+      const evidence = await checkFileEvidence(claim.path, {
+        cwd,
+        sinceTimestamp: options.sinceTimestamp,
+      });
+
+      let status: 'upheld' | 'unmet' = 'unmet';
+      let evidenceSummary = '';
+      let details: string | undefined;
+
+      if (!evidence.exists) {
+        evidenceSummary = 'does not exist';
+        details = `File '${claim.path}' was not found`;
+      } else if (!evidence.modifiedThisRun) {
+        evidenceSummary = `exists (size: ${evidence.sizeBytes ?? 0} B, unchanged)`;
+        details = `File '${claim.path}' exists but has no evidence of write or change this run (unmodified in git status and mtime prior to evaluation window)`;
+      } else {
+        status = 'upheld';
+        evidenceSummary = `exists (size: ${evidence.sizeBytes ?? 0} B, modified/created)`;
+      }
 
       results.push({
         id,
         type: 'file_written',
-        status: evidence.exists ? 'upheld' : 'unmet',
+        status,
         claim,
         claimSummary,
         evidenceSummary,
-        details: evidence.exists ? undefined : `File '${claim.path}' was not found`,
+        details,
       });
     }
   }
@@ -100,7 +131,19 @@ export async function verifyClaims(
     const gitFiles = await detectUntrackedAndModifiedFiles(cwd);
     let unclaimedIndex = 1;
     for (const file of gitFiles) {
-      if (!claimedFilePaths.has(file)) {
+      const isClaimed = Array.from(claimedFilePaths).some((claimedPath) => {
+        const normClaimed = claimedPath.replace(/\\/g, '/').replace(/^\.\//, '');
+        const normFile = file.replace(/\\/g, '/').replace(/^\.\//, '');
+        if (normClaimed === normFile) return true;
+        // If git file is a dir ending in / and claimed file is inside it
+        if (normFile.endsWith('/') && normClaimed.startsWith(normFile)) return true;
+        // If claimedPath is a directory and git file is inside it
+        const claimedDir = normClaimed.endsWith('/') ? normClaimed : `${normClaimed}/`;
+        if (normFile.startsWith(claimedDir)) return true;
+        return false;
+      });
+
+      if (!isClaimed) {
         results.push({
           id: `unclaimed-${unclaimedIndex++}`,
           type: 'unclaimed_file',

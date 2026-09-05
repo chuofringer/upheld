@@ -8,11 +8,11 @@
     },
     {
       "type": "tests_pass",
-      "cmd": "node -e 'console.log(\"Tests 1 failed | 3 passed (4)\"); process.exit(1);'",
+      "cmd": "npx vitest run --config examples/sample-project/vitest.config.ts",
       "passed": 5,
       "failed": 0,
       "total": 5,
-      "description": "False claim of all passing tests when suite actually failed"
+      "description": "False claim of 5 passed tests when suite only has 2"
     }
   ]
 }

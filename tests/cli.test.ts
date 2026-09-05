@@ -12,6 +12,8 @@ describe('CLI Integration', () => {
       '--cwd',
       resolve(__dirname, '..'),
       '--no-unclaimed',
+      '--since',
+      '0',
     ]);
     expect(code).toBe(0);
   });
@@ -23,6 +25,8 @@ describe('CLI Integration', () => {
       '--cwd',
       resolve(__dirname, '..'),
       '--no-unclaimed',
+      '--since',
+      '0',
     ]);
     expect(code).toBe(0);
   });
@@ -35,6 +39,8 @@ describe('CLI Integration', () => {
       '--cwd',
       resolve(__dirname, '..'),
       '--no-unclaimed',
+      '--since',
+      '0',
     ]);
     expect(code).toBe(1);
   });

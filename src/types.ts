@@ -40,6 +40,8 @@ export interface FileEvidenceMetrics {
   path: string;
   exists: boolean;
   sizeBytes?: number;
+  modifiedThisRun?: boolean;
+  mtimeMs?: number;
 }
 
 export interface VerificationResult {
@@ -71,4 +73,5 @@ export interface VerifyOptions {
   detectUnclaimed?: boolean;
   timeoutMs?: number;
   env?: Record<string, string | undefined>;
+  sinceTimestamp?: number;
 }

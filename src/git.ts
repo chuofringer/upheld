@@ -1,7 +1,12 @@
 import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
+import { resolve, relative } from 'node:path';
 
 const execAsync = promisify(exec);
+
+export function normalizePath(p: string): string {
+  return p.replace(/\\/g, '/').replace(/^\.\//, '');
+}
 
 export async function detectUntrackedAndModifiedFiles(cwd: string): Promise<string[]> {
   try {
@@ -24,11 +29,35 @@ export async function detectUntrackedAndModifiedFiles(cwd: string): Promise<stri
         if (filePath.includes(' -> ')) {
           filePath = filePath.split(' -> ')[1];
         }
-        files.push(filePath);
+        files.push(normalizePath(filePath));
       }
     }
     return files;
   } catch {
     return [];
   }
+}
+
+export async function isPathModifiedInGit(filePath: string, cwd: string): Promise<boolean> {
+  const modifiedFiles = await detectUntrackedAndModifiedFiles(cwd);
+  const normalizedTarget = normalizePath(filePath);
+  
+  // Also check relative path from cwd if absolute or differently rooted
+  const absTarget = resolve(cwd, filePath);
+  const relTarget = normalizePath(relative(cwd, absTarget));
+
+  return modifiedFiles.some((f) => {
+    const normalizedF = normalizePath(f);
+    // Direct match
+    if (normalizedF === normalizedTarget || normalizedF === relTarget) return true;
+    // If git reported a directory (e.g. "dir/") and filePath is inside it
+    if (normalizedF.endsWith('/') && (normalizedTarget.startsWith(normalizedF) || relTarget.startsWith(normalizedF))) {
+      return true;
+    }
+    // If filePath is a directory and f is inside it
+    const targetWithSlash = normalizedTarget.endsWith('/') ? normalizedTarget : `${normalizedTarget}/`;
+    if (normalizedF.startsWith(targetWithSlash)) return true;
+
+    return false;
+  });
 }
