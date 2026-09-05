@@ -1,0 +1,21 @@
+[
+  {
+    "tool_name": "write_file",
+    "parameters": {
+      "file_path": "README.md"
+    }
+  },
+  {
+    "tool_name": "edit_file",
+    "parameters": {
+      "target_file": "package.json"
+    }
+  },
+  {
+    "tool_name": "terminal",
+    "parameters": {
+      "cmd": "node -e 'console.log(\"Tests 2 passed (2)\"); process.exit(0);'"
+    },
+    "result": "Tests  2 passed (2)"
+  }
+]

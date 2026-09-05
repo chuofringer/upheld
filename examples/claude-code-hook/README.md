@@ -6,9 +6,10 @@ Upheld integrates directly with [Claude Code](https://docs.anthropic.com/en/docs
 
 When Claude Code finishes a task, an agent often reports that it created files and ran tests successfully. Upheld re-evaluates those exact assertions:
 
-1. Re-running claimed test commands (e.g. `pytest`, `npm test`, `vitest`, `jest`).
-2. Checking that claimed files actually exist on disk.
-3. Flagging any unclaimed modified or untracked files in git.
+1. Extracting claims from the session transcript or `.claude/claims.json`.
+2. Re-running claimed test commands (e.g. `pytest`, `npm test`, `vitest`, `jest`).
+3. Checking that claimed files actually exist on disk.
+4. Flagging any unclaimed modified or untracked files in git.
 
 ## Setup
 
@@ -34,10 +35,15 @@ Or configure Claude Code hooks in `.claude/settings.json`:
 }
 ```
 
-### 2. Instruct Agent to Emit Claims
+### 2. Transcript Extraction or Explicit Claims
 
-Add a lightweight prompt snippet to `CLAUDE.md` or system instructions:
+You can either extract claims directly from transcript logs:
+```bash
+# Extract claims from transcript log and pipe directly to verify
+cat .claude/transcript.jsonl | upheld extract | upheld verify
+```
 
+Or instruct the agent to write empirical claims to `.claude/claims.json` before concluding:
 ```markdown
 When concluding a task, write your empirical claims to `.claude/claims.json`:
 ```json

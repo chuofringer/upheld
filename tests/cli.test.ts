@@ -47,6 +47,7 @@ describe('CLI Integration', () => {
     expect(code).toBe(1);
   });
 
+<<<<<<< HEAD
   it('outputs JSON format when --format json or --json is passed', async () => {
     const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     try {
@@ -176,6 +177,36 @@ describe('Pre-commit Hook Script', () => {
       }).toThrow();
     } finally {
       if (existsSync(tempClaims)) unlinkSync(tempClaims);
+    }
+  });
+
+  it('runs upheld extract on transcript fixture and outputs valid claims json', async () => {
+    const outPath = resolve(fixturesDir, 'temp-extracted.json');
+    if (existsSync(outPath)) {
+      unlinkSync(outPath);
+    }
+
+    const code = await runCli([
+      'extract',
+      resolve(fixturesDir, 'transcript-claude-honest.jsonl'),
+      '--out',
+      outPath,
+    ]);
+    expect(code).toBe(0);
+    expect(existsSync(outPath)).toBe(true);
+
+    // Verify the extracted claims file
+    const verifyCode = await runCli([
+      'verify',
+      outPath,
+      '--cwd',
+      resolve(__dirname, '..'),
+      '--no-unclaimed',
+    ]);
+    expect(verifyCode).toBe(0);
+
+    if (existsSync(outPath)) {
+      unlinkSync(outPath);
     }
   });
 });

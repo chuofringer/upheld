@@ -1,10 +1,12 @@
-import { readFileSync, appendFileSync, watch as fsWatch } from 'node:fs';
+import { readFileSync, appendFileSync, writeFileSync, watch as fsWatch } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import { parseClaimsJson, readClaimsFromFile } from './claims.js';
 import { verifyClaims } from './verifier.js';
 import { formatGitHubJobSummary, formatMarkdownSummary, formatTerminalTable } from './formatter.js';
 import { initProject } from './init.js';
 import { postGitHubCheckRun } from './github.js';
-import { Claim, VerifyOptions, VerifyReport } from './types.js';
+import { extractClaimsFromTranscript } from './extractor.js';
+import { Claim, ClaimsDocument, VerifyOptions, VerifyReport } from './types.js';
 
 function printHelp(): void {
   console.log(`
@@ -15,10 +17,13 @@ Usage:
   upheld init [options]
   upheld verify [options] [claims.json]
   cat claims.json | upheld verify [options]
+  upheld extract <transcript> [options]
+  cat transcript.jsonl | upheld extract [options]
 
 Commands:
   init                 Bootstrap an .upheld configuration directory
   verify               Verify claims against empirical ground truth (default)
+  extract              Extract tests_pass and file_written claims from agent transcripts
 
 Init Options:
   --github-action      Drop a starter GitHub Action workflow (.github/workflows/upheld.yml)
@@ -38,6 +43,9 @@ Verify Options:
   --summary            Output GitHub Action job summary format
   --summary-file <f>   Append job summary to specified file (or $GITHUB_STEP_SUMMARY)
 
+Extraction Options:
+  --out <file>         Write extracted claims JSON document to specified file (default: stdout)
+  --no-dedupe          Do not deduplicate extracted claims
 General Options:
   -h, --help           Show this help message
   -v, --version        Show version
@@ -83,7 +91,7 @@ export async function runCli(args: string[] = process.argv.slice(2)): Promise<nu
     return 0;
   }
 
-  let command = 'verify';
+  let command: 'verify' | 'extract' = 'verify';
   let fileArg: string | undefined;
   let strict = false;
   let force = false;
@@ -96,13 +104,27 @@ export async function runCli(args: string[] = process.argv.slice(2)): Promise<nu
   let summaryFile: string | undefined = process.env.GITHUB_STEP_SUMMARY;
   let writeSummary = false;
   let enableGitHubCheck = false;
+  let outFile: string | undefined;
+  let dedupe = true;
 
-  for (let i = 0; i < args.length; i++) {
+  // Check if first positional arg is a command
+  let startIndex = 0;
+  if (args[0] === 'verify') {
+    command = 'verify';
+    startIndex = 1;
+  } else if (args[0] === 'extract') {
+    command = 'extract';
+    startIndex = 1;
+  }
+
+  for (let i = startIndex; i < args.length; i++) {
     const arg = args[i];
     if (arg === 'init') {
       command = 'init';
     } else if (arg === 'verify') {
       command = 'verify';
+    } else if (arg === 'extract') {
+      command = 'extract';
     } else if (arg === '-w' || arg === '--watch') {
       watch = true;
     } else if (arg === '--strict') {
@@ -125,6 +147,10 @@ export async function runCli(args: string[] = process.argv.slice(2)): Promise<nu
       writeSummary = true;
     } else if (arg === '--no-unclaimed') {
       detectUnclaimed = false;
+    } else if (arg === '--out') {
+      outFile = args[++i];
+    } else if (arg === '--no-dedupe') {
+      dedupe = false;
     } else if (arg === '--format') {
       const next = args[++i];
       if (next === 'table' || next === 'markdown' || next === 'json') {
@@ -175,6 +201,48 @@ export async function runCli(args: string[] = process.argv.slice(2)): Promise<nu
       console.error(`Error initializing project: ${message}`);
       return 1;
     }
+  }
+
+  if (command === 'extract') {
+    let transcriptContent = '';
+    try {
+      if (fileArg) {
+        transcriptContent = await readFile(fileArg, 'utf-8');
+      } else {
+        transcriptContent = await readStdin();
+        if (!transcriptContent.trim()) {
+          console.error('Error: No transcript input provided via file argument or stdin.');
+          printHelp();
+          return 1;
+        }
+      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(`Error reading transcript: ${message}`);
+      return 1;
+    }
+
+    const claims = extractClaimsFromTranscript(transcriptContent, { cwd, dedupe });
+    const claimsDoc: ClaimsDocument = {
+      version: '1.0',
+      claims,
+    };
+
+    const outputJson = JSON.stringify(claimsDoc, null, 2);
+
+    if (outFile) {
+      try {
+        writeFileSync(outFile, outputJson, 'utf-8');
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        console.error(`Error writing claims output to ${outFile}: ${message}`);
+        return 1;
+      }
+    } else {
+      console.log(outputJson);
+    }
+
+    return 0;
   }
 
   if (command !== 'verify') {

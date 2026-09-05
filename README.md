@@ -70,6 +70,7 @@ When executed, Upheld evaluates agent claims against on-disk and execution recei
 
 ## Features
 
+- **Transcript Claim Extraction**: Automatically parses Claude Code and Cursor tool logs (JSONL, JSON, or plain text transcripts) to extract `tests_pass` and `file_written` claims.
 - **Empirical Re-run**: Re-runs claimed test commands (`pytest`, `vitest`, `jest`, or arbitrary shell commands) and compares parsed outputs (passed/failed/total counts and exit status) to what was claimed.
 - **File Artifact Verification**: Checks for write evidence that claimed file paths were created or modified during the run via git status (`M`, `A`, `??`) or modification time (`mtime`) against `--since`; pre-existing untouched files evaluate to unmet.
 - **Unclaimed Change Detection**: Identifies files modified or created in git that were never claimed by the agent.
@@ -173,6 +174,7 @@ Options:
   node dist/bin.js verify claims.json --strict
   ```
 
+<<<<<<< HEAD
 ### Bootstrap Configuration (`init`)
 Quickly bootstrap an `.upheld` directory with template claims, a Claude Code Stop-hook script, and a README:
 
@@ -193,6 +195,16 @@ Watch a claims file for changes and re-verify automatically during development:
 node dist/bin.js verify --watch path/to/claims.json
 # or
 npx . verify -w path/to/claims.json
+```
+
+### Extract Claims from Agent Transcripts
+Parse Claude Code or Cursor logs (JSONL, JSON arrays, or text):
+```bash
+# Extract to a claims.json file
+upheld extract agent-transcript.jsonl --out claims.json
+
+# Extract from stdin and pipe directly to verify
+cat transcript.jsonl | upheld extract | upheld verify
 ```
 
 ### Verify Claims from a File
@@ -239,7 +251,7 @@ pre-commit:
 ```
 
 ### Claude Code Stop-Hook
-Upheld can run as a Claude Code Stop-hook to verify an agent's claims before concluding a session. See [`examples/claude-code-hook/`](./examples/claude-code-hook/) for setup and scripts.
+Upheld can run as a Claude Code Stop-hook to extract claims from the session transcript and verify them before concluding a session. See [`examples/claude-code-hook/`](./examples/claude-code-hook/) for setup and scripts.
 
 ### GitHub Actions
 To verify claims in CI, run the built CLI directly or invoke local verify steps:
