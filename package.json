@@ -1,0 +1,47 @@
+{
+  "name": "upheld",
+  "version": "0.0.1",
+  "description": "Harness-agnostic claims-vs-evidence verifier for AI coding agents. Done means shown.",
+  "author": "vibemapper",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/chuofringer/upheld.git"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "upheld": "./dist/bin.js"
+  },
+  "files": [
+    "dist",
+    "action.yml",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "ai-agents",
+    "claims",
+    "evidence",
+    "verification",
+    "claude-code",
+    "testing",
+    "benchmarking"
+  ],
+  "devDependencies": {
+    "@types/node": "^22.13.0",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.5"
+  }
+}

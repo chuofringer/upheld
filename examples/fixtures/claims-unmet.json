@@ -1,0 +1,18 @@
+{
+  "version": "1.0",
+  "claims": [
+    {
+      "type": "file_written",
+      "path": "non_existent_fake_file.txt",
+      "description": "Claiming file that does not exist"
+    },
+    {
+      "type": "tests_pass",
+      "cmd": "node -e 'console.log(\"Tests 1 failed | 3 passed (4)\"); process.exit(1);'",
+      "passed": 5,
+      "failed": 0,
+      "total": 5,
+      "description": "False claim of all passing tests when suite actually failed"
+    }
+  ]
+}
