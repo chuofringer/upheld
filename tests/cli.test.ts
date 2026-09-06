@@ -47,7 +47,6 @@ describe('CLI Integration', () => {
     expect(code).toBe(1);
   });
 
-<<<<<<< HEAD
   it('outputs JSON format when --format json or --json is passed', async () => {
     const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     try {
@@ -179,6 +178,10 @@ describe('Pre-commit Hook Script', () => {
       if (existsSync(tempClaims)) unlinkSync(tempClaims);
     }
   });
+});
+
+describe('Transcript Extraction CLI', () => {
+  const fixturesDir = resolve(__dirname, '../examples/fixtures');
 
   it('runs upheld extract on transcript fixture and outputs valid claims json', async () => {
     const outPath = resolve(fixturesDir, 'temp-extracted.json');

@@ -91,7 +91,7 @@ export async function runCli(args: string[] = process.argv.slice(2)): Promise<nu
     return 0;
   }
 
-  let command: 'verify' | 'extract' = 'verify';
+  let command: 'verify' | 'extract' | 'init' = 'verify';
   let fileArg: string | undefined;
   let strict = false;
   let force = false;
@@ -114,6 +114,9 @@ export async function runCli(args: string[] = process.argv.slice(2)): Promise<nu
     startIndex = 1;
   } else if (args[0] === 'extract') {
     command = 'extract';
+    startIndex = 1;
+  } else if (args[0] === 'init') {
+    command = 'init';
     startIndex = 1;
   }
 
