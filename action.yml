@@ -1,0 +1,75 @@
+name: 'Upheld Claims Verifier'
+description: 'Verify agent claims against empirical evidence (tests & file writes) and post job summaries'
+author: 'vibemapper'
+branding:
+  icon: 'check-circle'
+  color: 'green'
+
+inputs:
+  claims-file:
+    description: 'Path to claims JSON file'
+    required: false
+    default: '.upheld/claims.json'
+  claims-json:
+    description: 'Raw claims JSON string'
+    required: false
+    default: ''
+  strict:
+    description: 'Whether to fail the step if any claim is unmet (true/false)'
+    required: false
+    default: 'false'
+  working-directory:
+    description: 'Working directory for verification'
+    required: false
+    default: '.'
+
+outputs:
+  upheld-count:
+    description: 'Number of upheld claims'
+    value: ${{ steps.verify.outputs.upheld }}
+  unmet-count:
+    description: 'Number of unmet claims'
+    value: ${{ steps.verify.outputs.unmet }}
+  unclaimed-count:
+    description: 'Number of unclaimed changes'
+    value: ${{ steps.verify.outputs.unclaimed }}
+  has-unmet:
+    description: 'Whether any claims were unmet (true/false)'
+    value: ${{ steps.verify.outputs.has_unmet }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Node.js if needed
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install upheld
+      shell: bash
+      run: |
+        if ! command -v upheld &> /dev/null; then
+          npm install -g upheld@latest || npm install -g .
+        fi
+
+    - name: Run upheld verify
+      id: verify
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        STRICT: ${{ inputs.strict }}
+        CLAIMS_FILE: ${{ inputs.claims-file }}
+        CLAIMS_JSON: ${{ inputs.claims-json }}
+      run: |
+        STRICT_FLAG=""
+        if [ "$STRICT" = "true" ]; then
+          STRICT_FLAG="--strict"
+        fi
+
+        if [ -n "$CLAIMS_JSON" ]; then
+          echo "$CLAIMS_JSON" | upheld verify $STRICT_FLAG
+        elif [ -f "$CLAIMS_FILE" ]; then
+          upheld verify $STRICT_FLAG "$CLAIMS_FILE"
+        else
+          echo "::warning::No claims file found at $CLAIMS_FILE and no raw claims JSON provided."
+        fi
