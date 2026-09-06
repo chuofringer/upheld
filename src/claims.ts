@@ -7,8 +7,11 @@ export function isClaim(obj: unknown): obj is Claim {
   if (o.type === 'tests_pass' && typeof o.cmd === 'string') {
     return true;
   }
-  if (o.type === 'file_written' && typeof o.path === 'string') {
-    return true;
+  if (o.type === 'file_written') {
+    const hasPath = typeof o.path === 'string' && o.path.trim().length > 0;
+    const hasPaths = Array.isArray(o.paths) && o.paths.length > 0 && o.paths.every((p) => typeof p === 'string');
+    const hasGlob = typeof o.glob === 'string' ? o.glob.trim().length > 0 : (Array.isArray(o.glob) && o.glob.length > 0 && o.glob.every((g) => typeof g === 'string'));
+    return hasPath || hasPaths || hasGlob;
   }
   return false;
 }

@@ -11,4 +11,5 @@ export * from './runners/pytest.js';
 export * from './runners/vitest.js';
 export * from './runners/jest.js';
 export * from './adapters/index.js';
+export { isPathModifiedInGit, detectUntrackedAndModifiedFiles, normalizePath } from './git.js';
 export { runCli } from './cli.js';

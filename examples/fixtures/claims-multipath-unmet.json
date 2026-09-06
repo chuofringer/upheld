@@ -1,0 +1,13 @@
+{
+  "version": "1.0",
+  "claims": [
+    {
+      "type": "file_written",
+      "paths": [
+        "examples/sample-project/src/math.ts",
+        "examples/sample-project/src/missing_component.ts"
+      ],
+      "description": "Multi-path claim with one missing file"
+    }
+  ]
+}

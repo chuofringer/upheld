@@ -40,6 +40,33 @@ describe('Formatters', () => {
     hasUnmet: true,
   };
 
+  it('formats terminal table output for multi-path claims', () => {
+    const multiPathReport: VerifyReport = {
+      timestamp: '2026-09-05T00:00:00.000Z',
+      cwd: '/workspace',
+      results: [
+        {
+          id: 'claim-1',
+          type: 'file_written',
+          status: 'unmet',
+          claimSummary: 'paths: [src/a.ts, src/b.ts]',
+          evidenceSummary: '1/2 paths upheld (src/a.ts: upheld, src/b.ts: unmet)',
+          details: "File 'src/b.ts' was not found",
+          paths: [
+            { path: 'src/a.ts', status: 'upheld', exists: true, modifiedThisRun: true },
+            { path: 'src/b.ts', status: 'unmet', exists: false, details: "File 'src/b.ts' was not found" },
+          ],
+        },
+      ],
+      summary: { total: 1, upheld: 0, unmet: 1, unclaimed: 0 },
+      hasUnmet: true,
+    };
+    const table = formatTerminalTable(multiPathReport);
+    expect(table).toContain('paths: [src/a.ts, src/b.ts]');
+    expect(table).toContain('1/2 paths upheld');
+    expect(table).toContain("File 'src/b.ts' was not found");
+  });
+
   it('formats terminal table output', () => {
     const table = formatTerminalTable(sampleReport);
     expect(table).toContain('Upheld — Claims vs Evidence');

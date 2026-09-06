@@ -12,7 +12,14 @@ export interface TestsPassClaim {
 
 export interface FileWrittenClaim {
   type: 'file_written';
-  path: string;
+  /** Single file path */
+  path?: string;
+  /** Multiple file paths */
+  paths?: string[];
+  /** Optional glob pattern or array of glob patterns to resolve and verify */
+  glob?: string | string[];
+  /** Minimum number of matching files required when using glob (default: 1) */
+  minMatches?: number;
   description?: string;
 }
 
@@ -46,6 +53,15 @@ export interface FileEvidenceMetrics {
   mtimeMs?: number;
 }
 
+export interface PathEvidenceResult {
+  path: string;
+  status: 'upheld' | 'unmet';
+  exists: boolean;
+  sizeBytes?: number;
+  modifiedThisRun?: boolean;
+  details?: string;
+}
+
 export interface VerificationResult {
   id: string;
   type: ClaimType | 'unclaimed_file';
@@ -54,6 +70,8 @@ export interface VerificationResult {
   claimSummary: string;
   evidenceSummary: string;
   details?: string;
+  /** Per-path results when verifying multi-path or glob file_written claims */
+  paths?: PathEvidenceResult[];
 }
 
 export interface VerifyReport {

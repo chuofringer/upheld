@@ -13,6 +13,23 @@ describe('Claims Parser', () => {
     expect(claims[1].type).toBe('file_written');
   });
 
+  it('parses multi-path and glob file_written claims', () => {
+    const raw = JSON.stringify([
+      { type: 'file_written', paths: ['src/main.ts', 'src/types.ts'] },
+      { type: 'file_written', glob: 'src/**/*.ts', minMatches: 2 }
+    ]);
+    const claims = parseClaimsJson(raw);
+    expect(claims).toHaveLength(2);
+    expect(claims[0].type).toBe('file_written');
+    if (claims[0].type === 'file_written') {
+      expect(claims[0].paths).toEqual(['src/main.ts', 'src/types.ts']);
+    }
+    if (claims[1].type === 'file_written') {
+      expect(claims[1].glob).toBe('src/**/*.ts');
+      expect(claims[1].minMatches).toBe(2);
+    }
+  });
+
   it('parses claims document object with claims array', () => {
     const raw = JSON.stringify({
       version: '1.0',
