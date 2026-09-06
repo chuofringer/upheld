@@ -54,7 +54,7 @@
             </div>
             <h1 class="hero-title">Claims-vs-evidence verifier for AI coding agents.</h1>
             <p class="hero-subtitle">
-              Stop trusting agent prose summaries. Upheld deterministically correlates agent claims against execution receipts, tool telemetry, diff records, and test passes.
+              Stop trusting agent prose summaries. Upheld deterministically correlates agent claims against real execution receipts, git status, file mtimes, and test re-runs.
             </p>
             <div class="hero-actions">
               <a href="#quickstart" class="btn-primary">
@@ -75,12 +75,12 @@
                   <div class="terminal-dot"></div>
                   <div class="terminal-dot"></div>
                 </div>
-                <div class="terminal-title">upheld audit — session.json</div>
+                <div class="terminal-title">upheld verify — claims.json</div>
               </div>
               <div class="terminal-body">
                 <div class="terminal-line">
                   <span class="terminal-prompt">$</span>
-                  <span class="text-secondary">node dist/bin.js verify --transcript ./agent-session.json</span>
+                  <span class="text-secondary">node dist/bin.js verify claims.json</span>
                 </div>
 
                 <div class="audit-entry upheld">
@@ -88,26 +88,26 @@
                     <span class="claim-tag">[CLAIM: file_written]</span>
                     <span class="verdict-badge upheld">UPHELD</span>
                   </div>
-                  <div class="audit-text">"Created src/auth/token.ts with HMAC validation"</div>
-                  <div class="audit-evidence">Evidence: File write event logged (148 bytes written to src/auth/token.ts)</div>
+                  <div class="audit-text">path: src/auth/token.ts</div>
+                  <div class="audit-evidence">Evidence: exists (size: 148 B, modified/created in git status)</div>
                 </div>
 
-                <div class="audit-entry refuted">
+                <div class="audit-entry unmet">
                   <div class="audit-meta">
                     <span class="claim-tag">[CLAIM: tests_pass]</span>
-                    <span class="verdict-badge refuted">REFUTED</span>
+                    <span class="verdict-badge unmet">UNMET</span>
                   </div>
-                  <div class="audit-text">"Ran test suite; all tests passing"</div>
-                  <div class="audit-evidence">Evidence: Test process exited with non-zero code (exit code 1)</div>
+                  <div class="audit-text">cmd: npm test</div>
+                  <div class="audit-evidence">Evidence: Command exited with non-zero code 1</div>
                 </div>
 
-                <div class="audit-entry unsub">
+                <div class="audit-entry unclaimed">
                   <div class="audit-meta">
-                    <span class="claim-tag">[UNCLAIMED]</span>
-                    <span class="verdict-badge unsub">UNSUBSTANTIATED</span>
+                    <span class="claim-tag">[UNCLAIMED FILE]</span>
+                    <span class="verdict-badge unclaimed">UNCLAIMED</span>
                   </div>
-                  <div class="audit-text">"Optimized database connection pooling latency"</div>
-                  <div class="audit-evidence">Evidence: No corresponding write or test evidence in session transcript</div>
+                  <div class="audit-text">path: src/pool.ts</div>
+                  <div class="audit-evidence">Evidence: unclaimed file written/modified in git status: src/pool.ts</div>
                 </div>
               </div>
             </div>
@@ -130,25 +130,25 @@
         <div class="steps-grid">
           <div class="step-card">
             <div class="step-number">01</div>
-            <h3 class="step-title">Ingest Telemetry</h3>
+            <h3 class="step-title">Ingest Claims Document</h3>
             <p class="step-desc">
-              Captures structured transcripts: tool call arguments, stdout/stderr streams, process exit codes, and file write payloads from agent execution envelopes.
+              Accepts structured JSON claims (or stdin) declaring tests that passed and files written during the agent session.
             </p>
             <div class="step-code-snippet">
-              // Ingests session transcript<br>
-              transcript: { tool_calls: [...], output: [...] }
+              // Ingests claims document<br>
+              { "claims": [{ "type": "tests_pass", "cmd": "npm test" }] }
             </div>
           </div>
 
           <div class="step-card">
             <div class="step-number">02</div>
-            <h3 class="step-title">Correlate Claims</h3>
+            <h3 class="step-title">Evaluate Ground Truth</h3>
             <p class="step-desc">
-              Extracts assertions from the agent's prose response and correlates them against concrete write events and test execution receipts.
+              Re-executes test commands to check exit codes/counts, and checks git status and file mtimes against <code>--since</code> for write evidence.
             </p>
             <div class="step-code-snippet">
-              // Maps claim to evidence rule<br>
-              "fixed bug" ➔ requires: file_written + tests_pass
+              // Evaluates empirical evidence<br>
+              re-run test cmd (exit 0) + git status / mtime
             </div>
           </div>
 
@@ -156,11 +156,11 @@
             <div class="step-number">03</div>
             <h3 class="step-title">Verify & Report</h3>
             <p class="step-desc">
-              Evaluates whether each claim holds up against empirical evidence. Outputs a report by default; exits non-zero under <code>--strict</code>.
+              Reconciles claims into upheld, unmet, and unclaimed verdicts. Outputs a report by default; exits non-zero under <code>--strict</code>.
             </p>
             <div class="step-code-snippet">
               // Verdict breakdown<br>
-              upheld: 2 | refuted: 1 | unsubstantiated: 0
+              upheld: 2 | unmet: 1 | unclaimed: 0
             </div>
           </div>
         </div>
@@ -174,7 +174,7 @@
           <div class="section-eyebrow">Verification Rules</div>
           <h2 class="section-title">Thin-Wedge Claim Types & Evidence Standards</h2>
           <p class="section-desc">
-            Passive assumptions do not count as proof. Upheld focuses on clear, deterministic evidence requirements.
+            Passive assumptions do not count as proof. Upheld focuses on exactly two thin-wedge claim types.
           </p>
         </div>
 
@@ -185,10 +185,10 @@
               <span class="claim-type-rule">Write Evidence</span>
             </div>
             <p class="claim-type-desc">
-              Verifies that the agent actually executed a file write or edit event during the session. Mere presence on disk is rejected as insufficient proof.
+              Verifies that a claimed file was actually modified or created during the session. Passive presence on disk without mutation is rejected as unmet.
             </p>
             <div class="evidence-spec">
-              <span><strong>Required Evidence:</strong> Recorded tool write event or mutation payload with file path and content.</span>
+              <span><strong>Required Evidence:</strong> File exists and shows write evidence via <code>git status</code> (untracked/modified) or mtime newer than <code>--since</code> timestamp.</span>
             </div>
           </div>
 
@@ -198,23 +198,10 @@
               <span class="claim-type-rule">Zero Exit Receipt</span>
             </div>
             <p class="claim-type-desc">
-              Verifies that the claimed test suite actually ran to completion with a successful exit code (0) and matching command invocation.
+              Verifies that the claimed test suite executes to completion with a successful exit code (0) and matches claimed test metrics if specified.
             </p>
             <div class="evidence-spec">
-              <span><strong>Required Evidence:</strong> Process execution receipt for the test command with exit code 0.</span>
-            </div>
-          </div>
-
-          <div class="claim-type-card">
-            <div class="claim-type-header">
-              <span class="claim-type-title">unclaimed</span>
-              <span class="claim-type-rule">Audit Gap</span>
-            </div>
-            <p class="claim-type-desc">
-              Identifies statements made in agent prose that lack any corresponding write evidence or test receipts in the session transcript.
-            </p>
-            <div class="evidence-spec">
-              <span><strong>Verdict:</strong> Flagged as UNSUBSTANTIATED during report generation or rejected in <code>--strict</code> mode.</span>
+              <span><strong>Required Evidence:</strong> Direct test runner execution receipt with exit code 0 and matching test counts (passed/failed/total).</span>
             </div>
           </div>
         </div>
@@ -228,20 +215,20 @@
           <div class="section-eyebrow">Sample Audit Manifest</div>
           <h2 class="section-title">Claims vs. Evidence in Action</h2>
           <p class="section-desc">
-            A real-world inspection example illustrating how agent statements are reconciled against raw telemetry.
+            A real-world inspection example illustrating how agent claims are reconciled against actual test execution and git/mtime evidence.
           </p>
         </div>
 
         <div class="demo-table-wrapper">
           <div class="demo-disclaimer-bar">
-            <span><strong>DEMO MANIFEST</strong> — Example verification dataset (mock telemetry for demonstration)</span>
+            <span><strong>DEMO MANIFEST</strong> — Example verification dataset (evaluation against local workspace)</span>
             <span class="demo-disclaimer-badge">AUDIT MODE: REPORT</span>
           </div>
 
           <table class="demo-table">
             <thead>
               <tr>
-                <th>Claim (Agent Prose)</th>
+                <th>Claim Summary</th>
                 <th>Type</th>
                 <th>Required Evidence</th>
                 <th>Actual Evidence Observed</th>
@@ -251,39 +238,39 @@
             <tbody>
               <tr>
                 <td class="claim-cell">
-                  <span class="claim-quote">"Created config/auth.json with default rate limits"</span>
+                  <span class="claim-quote">path: config/auth.json</span>
                 </td>
                 <td class="mono claim-kind">file_written</td>
-                <td class="evidence-cell">Tool write event for config/auth.json</td>
-                <td class="evidence-cell">Write event recorded: <code>config/auth.json</code> (420 bytes)</td>
+                <td class="evidence-cell">Git status modified/untracked or mtime &gt; --since</td>
+                <td class="evidence-cell">exists (size: 420 B, modified/created in git status)</td>
                 <td><span class="verdict-badge upheld">UPHELD</span></td>
               </tr>
               <tr>
                 <td class="claim-cell">
-                  <span class="claim-quote">"Ran test suite; all unit tests passing"</span>
+                  <span class="claim-quote">cmd: npm test</span>
                 </td>
                 <td class="mono claim-kind">tests_pass</td>
-                <td class="evidence-cell">Test command execution receipt with exit code 0</td>
-                <td class="evidence-cell"><code>npm test</code> exited 0</td>
+                <td class="evidence-cell">Re-executed test command with exit code 0</td>
+                <td class="evidence-cell"><code>npm test</code> exited 0 (passed: 12)</td>
                 <td><span class="verdict-badge upheld">UPHELD</span></td>
               </tr>
               <tr>
                 <td class="claim-cell">
-                  <span class="claim-quote">"Ran test suite; all unit tests passing"</span>
+                  <span class="claim-quote">cmd: npm test</span>
                 </td>
                 <td class="mono claim-kind">tests_pass</td>
-                <td class="evidence-cell">Test command execution receipt with exit code 0</td>
+                <td class="evidence-cell">Re-executed test command with exit code 0</td>
                 <td class="evidence-cell"><code>npm test</code> exited 1 (assertion failure)</td>
-                <td><span class="verdict-badge refuted">REFUTED</span></td>
+                <td><span class="verdict-badge unmet">UNMET</span></td>
               </tr>
               <tr>
                 <td class="claim-cell">
-                  <span class="claim-quote">"Created src/pool.ts to optimize latency"</span>
+                  <span class="claim-quote">(none)</span>
                 </td>
-                <td class="mono claim-kind">unclaimed</td>
-                <td class="evidence-cell">Write event or test receipt</td>
-                <td class="evidence-cell">No write event or command found in transcript</td>
-                <td><span class="verdict-badge unsub">UNSUBSTANTIATED</span></td>
+                <td class="mono claim-kind">unclaimed_file</td>
+                <td class="evidence-cell">Claim in document matching modified file</td>
+                <td class="evidence-cell">unclaimed file written/modified in git status: src/pool.ts</td>
+                <td><span class="verdict-badge unclaimed">UNCLAIMED</span></td>
               </tr>
             </tbody>
           </table>
@@ -311,7 +298,7 @@
             </div>
             <h3 class="feature-title">Local-First & Private</h3>
             <p class="feature-desc">
-              Runs 100% locally on your workstation or CI runner. No transcripts, code, or telemetry are ever uploaded to third-party clouds.
+              Runs 100% locally on your workstation or CI runner via Node.js. No source code or evidence is ever uploaded to third-party clouds.
             </p>
           </div>
 
@@ -338,21 +325,7 @@
             </div>
             <h3 class="feature-title">Optional --strict CI Gate</h3>
             <p class="feature-desc">
-              Enable <code>--strict</code> in GitHub Actions or pre-commit hooks to fail the build whenever an unsubstantiated or refuted claim is detected.
-            </p>
-          </div>
-
-          <div class="feature-card">
-            <div class="feature-icon-wrapper">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
-                <line x1="8" y1="21" x2="16" y2="21"/>
-                <line x1="12" y1="17" x2="12" y2="21"/>
-              </svg>
-            </div>
-            <h3 class="feature-title">Agent Agnostic</h3>
-            <p class="feature-desc">
-              Supports standardized transcript formats from Claude Code, Cursor, MCP-compatible agents, and custom autonomous LLM loops.
+              Enable <code>--strict</code> in GitHub Actions or pre-commit hooks to fail the build whenever an unmet claim is detected.
             </p>
           </div>
 
@@ -366,7 +339,7 @@
             </div>
             <h3 class="feature-title">Write-Evidence Semantics</h3>
             <p class="feature-desc">
-              <code>file_written</code> checks for genuine write operations and mutation receipts rather than trusting passive file existence.
+              <code>file_written</code> checks for genuine write operations via git status and mtime vs <code>--since</code> rather than trusting passive file existence.
             </p>
           </div>
 
@@ -379,7 +352,7 @@
             </div>
             <h3 class="feature-title">Deterministic Engine</h3>
             <p class="feature-desc">
-              No LLM-as-a-judge unpredictability. Verification rules use pure structural logic, diff analysis, and execution receipts.
+              No LLM-as-a-judge unpredictability. Verification rules use deterministic git status inspection and process exit receipts.
             </p>
           </div>
         </div>
@@ -421,29 +394,45 @@
 <span class="code-comment"># 2. Install dependencies & build TypeScript source</span>
 <span class="code-command">npm</span> install && <span class="code-command">npm</span> run build
 
-<span class="code-comment"># 3. Verify an agent transcript in default (Report) mode</span>
-<span class="code-command">node</span> dist/bin.js verify <span class="code-flag">--transcript</span> <span class="code-string">./session.json</span>
+<span class="code-comment"># 3. Verify claims in default (Report) mode</span>
+<span class="code-command">node</span> dist/bin.js verify claims.json
 
-<span class="code-comment"># 4. Optional: Run with --strict to fail CI on unverified claims</span>
-<span class="code-command">node</span> dist/bin.js verify <span class="code-flag">--strict</span> <span class="code-flag">--transcript</span> <span class="code-string">./session.json</span></code></pre>
+<span class="code-comment"># 4. Optional: Run with --strict to fail CI on unmet claims</span>
+<span class="code-command">node</span> dist/bin.js verify <span class="code-flag">--strict</span> claims.json</code></pre>
           </div>
 
           <div class="code-block-wrapper">
             <div class="code-block-header">
-              <span>json — Sample Verification Output (Report Mode)</span>
+              <span>json — Sample Verification Output (--json)</span>
               <span>json</span>
             </div>
             <pre class="code-block"><code>{
-  <span class="code-string">"version"</span>: <span class="code-string">"1.0.0"</span>,
-  <span class="code-string">"session"</span>: <span class="code-string">"agent-run-2026-09-05"</span>,
-  <span class="code-string">"mode"</span>: <span class="code-string">"report"</span>,
+  <span class="code-string">"timestamp"</span>: <span class="code-string">"2026-09-06T00:30:00.000Z"</span>,
+  <span class="code-string">"cwd"</span>: <span class="code-string">"/workspace"</span>,
+  <span class="code-string">"results"</span>: [
+    {
+      <span class="code-string">"id"</span>: <span class="code-string">"claim-1"</span>,
+      <span class="code-string">"type"</span>: <span class="code-string">"file_written"</span>,
+      <span class="code-string">"status"</span>: <span class="code-string">"upheld"</span>,
+      <span class="code-string">"claimSummary"</span>: <span class="code-string">"path: src/auth/token.ts"</span>,
+      <span class="code-string">"evidenceSummary"</span>: <span class="code-string">"exists (size: 148 B, modified/created)"</span>
+    },
+    {
+      <span class="code-string">"id"</span>: <span class="code-string">"claim-2"</span>,
+      <span class="code-string">"type"</span>: <span class="code-string">"tests_pass"</span>,
+      <span class="code-string">"status"</span>: <span class="code-string">"unmet"</span>,
+      <span class="code-string">"claimSummary"</span>: <span class="code-string">"cmd: npm test"</span>,
+      <span class="code-string">"evidenceSummary"</span>: <span class="code-string">"exit: 1"</span>,
+      <span class="code-string">"details"</span>: <span class="code-string">"Command exited with non-zero code 1"</span>
+    }
+  ],
   <span class="code-string">"summary"</span>: {
-    <span class="code-string">"total_claims"</span>: 3,
-    <span class="code-string">"upheld"</span>: 2,
-    <span class="code-string">"refuted"</span>: 1,
-    <span class="code-string">"unsubstantiated"</span>: 0
+    <span class="code-string">"total"</span>: 2,
+    <span class="code-string">"upheld"</span>: 1,
+    <span class="code-string">"unmet"</span>: 1,
+    <span class="code-string">"unclaimed"</span>: 0
   },
-  <span class="code-string">"status"</span>: <span class="code-string">"passed_with_warnings"</span>
+  <span class="code-string">"hasUnmet"</span>: <span class="code-keyword">true</span>
 }</code></pre>
           </div>
         </div>
@@ -469,7 +458,7 @@
             </h3>
             <div class="faq-answer">
               <p>
-                No. Upheld is an open-source, local-first CLI tool and verification library. There are no hosted cloud dashboards, tracking beacons, or account logins.
+                No. Upheld is an open-source, local-first CLI tool and verification library built with Node.js and TypeScript. There are no hosted cloud dashboards, tracking beacons, or account logins.
               </p>
             </div>
           </div>
@@ -481,7 +470,7 @@
             </h3>
             <div class="faq-answer">
               <p>
-                No. Upheld is not published to npm under a global name. Run it by cloning the GitHub repository and building from source locally.
+                No. Upheld is not published to npm under a global package name. Run it by cloning the GitHub repository, running <code>npm install &amp;&amp; npm run build</code>, and invoking <code>node dist/bin.js</code>.
               </p>
             </div>
           </div>
@@ -493,7 +482,7 @@
             </h3>
             <div class="faq-answer">
               <p>
-                A file simply being present on disk does not prove the agent modified or created it during the session. <code>file_written</code> requires direct evidence of a write tool call or file mutation event during that specific session.
+                A file simply being present on disk does not prove the agent modified or created it during the session. <code>file_written</code> requires direct evidence via <code>git status</code> (untracked or modified) and/or file modification timestamp comparison against <code>--since</code>.
               </p>
             </div>
           </div>
@@ -505,10 +494,10 @@
             </h3>
             <div class="faq-answer">
               <p>
-                By default, Upheld runs in <strong>Report mode</strong>, outputting a clear diagnostic table and JSON manifest without terminating your workflow.
+                By default, Upheld runs in <strong>Report mode</strong>, outputting a clear diagnostic table and JSON manifest without terminating your workflow (exits 0).
               </p>
               <p>
-                When passed <code>--strict</code>, Upheld exits with a non-zero code if any claim is refuted or unsubstantiated, suitable for CI gate enforcement.
+                When passed <code>--strict</code>, Upheld exits with a non-zero code if any claim is unmet, suitable for CI gate enforcement.
               </p>
             </div>
           </div>
@@ -520,7 +509,7 @@
             </h3>
             <div class="faq-answer">
               <p>
-                No. Upheld avoids non-deterministic LLM-as-a-judge scoring. Verification is computed via deterministic correlation of write evidence and process exit receipts.
+                No. Upheld avoids non-deterministic LLM-as-a-judge scoring. Verification is computed via deterministic re-execution of test commands, git status inspection, and mtime comparison.
               </p>
             </div>
           </div>
