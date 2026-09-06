@@ -1,0 +1,18 @@
+{
+  "version": "1.0",
+  "claims": [
+    {
+      "type": "file_written",
+      "path": "examples/tutorial/fixtures/mini-corpus/generated.ts",
+      "description": "Mini fixture: claimed generated artifact"
+    },
+    {
+      "type": "tests_pass",
+      "cmd": "npx vitest run --config examples/tutorial/fixtures/mini-corpus/vitest.config.ts",
+      "passed": 3,
+      "failed": 0,
+      "total": 3,
+      "description": "Mini fixture: passing test suite with 3 unit tests"
+    }
+  ]
+}

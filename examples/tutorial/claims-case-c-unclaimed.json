@@ -1,0 +1,10 @@
+{
+  "version": "1.0",
+  "claims": [
+    {
+      "type": "file_written",
+      "path": "examples/tutorial/claimed_artifact.txt",
+      "description": "Claiming only one file while another untracked file (surprise_leak.log) was also written"
+    }
+  ]
+}

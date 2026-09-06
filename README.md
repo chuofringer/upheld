@@ -290,6 +290,13 @@ cat claims.json | node dist/bin.js verify --html report.html
 
 ---
 
+## Documentation & Tutorial
+
+Check out our comprehensive step-by-step walkthrough and runnable use case suite:
+- **[Tutorial & Runnable Guide](docs/tutorial.md)**: Concrete walkthrough covering test metrics verification, write evidence timestamps, unclaimed side-effect detection, exit code modes, and self-contained fixtures.
+- **Runnable Examples Script**: Run `bash examples/tutorial/run.sh` to execute all verification scenarios locally.
+
+---
 ## Integrations
 
 ### Pre-Commit Hooks (Husky / Lefthook)

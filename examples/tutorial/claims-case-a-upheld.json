@@ -1,0 +1,13 @@
+{
+  "version": "1.0",
+  "claims": [
+    {
+      "type": "tests_pass",
+      "cmd": "npx vitest run --config examples/sample-project/vitest.config.ts",
+      "passed": 2,
+      "failed": 0,
+      "total": 2,
+      "description": "Accurate claim: 2 passed vitest tests matching sample-project"
+    }
+  ]
+}

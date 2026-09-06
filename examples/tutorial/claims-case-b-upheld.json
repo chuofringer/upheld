@@ -1,0 +1,10 @@
+{
+  "version": "1.0",
+  "claims": [
+    {
+      "type": "file_written",
+      "path": "examples/tutorial/fixtures/mini-corpus/generated.ts",
+      "description": "Accurate claim: newly modified artifact verified via --since timestamp window"
+    }
+  ]
+}
