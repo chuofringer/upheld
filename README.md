@@ -1,6 +1,10 @@
 # Upheld
 
 <p align="center">
+  <img src="docs/brand/upheld-banner.png" alt="Upheld Banner" width="800" />
+</p>
+
+<p align="center">
   <strong>Claims, upheld.</strong> &nbsp;|&nbsp; <em>Done means shown.</em>
 </p>
 
