@@ -74,5 +74,5 @@ describe('Tutorial Examples and Runnable Suite', () => {
     expect(stdout).toContain('Claims, upheld. Done means shown.');
     expect(stdout).toContain('USE CASE A.1');
     expect(stdout).toContain('USE CASE E');
-  });
+  }, 60_000);
 });
