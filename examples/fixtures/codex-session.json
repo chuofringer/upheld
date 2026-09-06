@@ -1,0 +1,23 @@
+[
+  {
+    "type": "tool_call",
+    "name": "file_edit",
+    "parameters": {
+      "file_path": "src/core.ts"
+    },
+    "response": {
+      "status": "ok"
+    }
+  },
+  {
+    "type": "tool_call",
+    "name": "exec",
+    "parameters": {
+      "cmd": "npm test"
+    },
+    "response": {
+      "exit_code": 0,
+      "output": "3 passed"
+    }
+  }
+]

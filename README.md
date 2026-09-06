@@ -76,7 +76,7 @@ When executed, Upheld evaluates agent claims against on-disk and execution recei
 - **Unclaimed Change Detection**: Identifies files modified or created in git that were never claimed by the agent.
 - **Machine-Readable Output**: Emits structured JSON (`--format json` / `--json`) or Markdown (`--format markdown` / `--markdown`) for downstream tools.
 - **GitHub Check Run Integration**: Automatically posts or updates a Check Run named **"Upheld — Claims vs evidence"** when `GITHUB_TOKEN` and `GITHUB_SHA` are present (`--github-check`).
-- **Harness Agnostic**: Works with JSON claims documents or extracted transcripts from any producer or agent framework.
+- **Harness Agnostic**: Works with Claude Code, Codex, OpenCode, Cursor, custom CI/CD pipelines, or standalone CLIs.
 - **Report & Strict Modes**:
   - **Report Mode (default)**: Emits a structured Claims vs Evidence table and exits `0` for transparent observation.
   - **Strict Mode (`--strict`)**: Exits with a non-zero code if any claim is unmet or fails.
@@ -255,6 +255,12 @@ pre-commit:
 
 ### Claude Code Stop-Hook
 Upheld can run as a Claude Code Stop-hook to extract claims from the session transcript and verify them before concluding a session. See [`examples/claude-code-hook/`](./examples/claude-code-hook/) for setup and scripts.
+
+### Codex CLI Session Hook
+Extract and verify claims from Codex CLI sessions and tool events. See [`examples/codex-hook/`](./examples/codex-hook/) for adapters and setup.
+
+### OpenCode Session Hook
+Normalize tool events from OpenCode sessions into Upheld claims. See [`examples/opencode-hook/`](./examples/opencode-hook/) for adapters and setup.
 
 ### GitHub Actions
 To verify claims in CI, run the built CLI directly or invoke local verify steps:
