@@ -1,7 +1,20 @@
 #!/usr/bin/env node
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
-import { resolve } from 'node:path';
-import { normalizeCodexSessionToClaims } from 'upheld';
+import { resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Import from local build if available, otherwise relative path
+let normalizeCodexSessionToClaims;
+try {
+  const mod = await import('../../dist/index.js');
+  normalizeCodexSessionToClaims = mod.normalizeCodexSessionToClaims;
+} catch {
+  const mod = await import('../../src/index.js');
+  normalizeCodexSessionToClaims = mod.normalizeCodexSessionToClaims;
+}
 
 const sessionLogPath = process.argv[2] || process.env.CODEX_SESSION_LOG || '.codex/session.json';
 const claimsOutputPath = process.argv[3] || '.codex/claims.json';

@@ -18,7 +18,9 @@ Save or execute `codex-hook.mjs` at the end of a Codex session:
 
 ```bash
 node examples/codex-hook/codex-hook.mjs .codex/session.json .codex/claims.json
-npx upheld verify .codex/claims.json
+node dist/bin.js verify .codex/claims.json
+# or
+npx . verify .codex/claims.json
 ```
 
 ### 2. Instruct Codex to Emit Claims on Session End
@@ -35,15 +37,15 @@ When concluding a task, write tool events to `.codex/session.json` or write clai
   ]
 }
 ```
-Run `npx upheld verify .codex/claims.json` to verify claims against evidence before concluding.
+Run `node dist/bin.js verify .codex/claims.json` (or `npx . verify .codex/claims.json`) to verify claims against evidence before concluding.
 ```
 
 ### 3. Programmatic API
 
-You can also use Upheld's Codex adapter directly in TypeScript / JavaScript:
+You can also use Upheld's Codex adapter directly in TypeScript / JavaScript (e.g. from local build `./dist/index.js` or package imports):
 
 ```ts
-import { normalizeCodexSessionToClaims } from 'upheld';
+import { normalizeCodexSessionToClaims } from '../../dist/index.js';
 
 const claims = normalizeCodexSessionToClaims(sessionEvents);
 console.log(claims);

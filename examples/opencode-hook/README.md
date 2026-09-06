@@ -18,7 +18,9 @@ Execute `opencode-hook.mjs` at the end of an OpenCode session:
 
 ```bash
 node examples/opencode-hook/opencode-hook.mjs .opencode/session.json .opencode/claims.json
-npx upheld verify .opencode/claims.json
+node dist/bin.js verify .opencode/claims.json
+# or
+npx . verify .opencode/claims.json
 ```
 
 ### 2. Instruct OpenCode to Emit Claims on Session End
@@ -35,15 +37,15 @@ On task completion, write your session tool events to `.opencode/session.json` o
   ]
 }
 ```
-Run `npx upheld verify .opencode/claims.json` to verify claims against evidence.
+Run `node dist/bin.js verify .opencode/claims.json` (or `npx . verify .opencode/claims.json`) to verify claims against evidence.
 ```
 
 ### 3. Programmatic API
 
-You can also use Upheld's OpenCode adapter directly in TypeScript / JavaScript:
+You can also use Upheld's OpenCode adapter directly in TypeScript / JavaScript (e.g. from local build `./dist/index.js` or package imports):
 
 ```ts
-import { normalizeOpenCodeSessionToClaims } from 'upheld';
+import { normalizeOpenCodeSessionToClaims } from '../../dist/index.js';
 
 const claims = normalizeOpenCodeSessionToClaims(sessionEvents);
 console.log(claims);
