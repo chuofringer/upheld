@@ -192,7 +192,7 @@ Upheld — Claims vs Evidence
 
 ## Integrations (Planned / Scaffold Tip)
 
-> **Note**: Example hook scripts and the GitHub Actions composite action land with the scaffold PR ([#1](https://github.com/chuofringer/upheld/pull/1)). Once merged to `main`, the following workflows become available:
+> **Note**: Example hook scripts and the GitHub Actions composite action land with the scaffold PR ([#1](https://github.com/chuofringer/upheld/pull/1)). Once merged to `main`, integration workflows will become available:
 
 ### GitHub Actions
 To verify claims in CI, run the built CLI directly or invoke local verify steps:
