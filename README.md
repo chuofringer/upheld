@@ -33,20 +33,35 @@ AI coding agents often assert that tasks are complete with phrases like *"all 18
 
 ## Quick Start
 
-**Upheld** is a CLI for any harness. Open/DIY loops (OpenCode, Aider, custom shells, CI) get the most leverage from the same verifier — no proprietary orchestrator required.
+Upheld is a **CLI** verifier for any agent harness. Open and DIY loops (OpenCode, Aider, custom shells, CI) get the most leverage: you wire `verify` into the loop yourself via a skill, stop-hook, or one shell step.
 
 <p align="center">
-  <img src="docs/brand/upheld-quickstart-flow.png" alt="Upheld Quick Start flow" width="900" />
+  <img src="docs/brand/upheld-quickstart-flow.png" alt="How Upheld works: any open harness → agent claims → Upheld verify → UPHELD or UNMET" width="900" />
 </p>
 
-Three steps claimable today:
+### 1. Install once (per machine / project)
 
-1. **Install once (not every turn):** `npm install && npm run build`  
-   *(Global `npm install -g` is not claimable yet — Upheld is not published to npm.)*
-2. **Bootstrap or author claims:** `npx . init` or write a `claims.json` — see [Supported Claim Types](#supported-claim-types).
-3. **Verify:** `node dist/bin.js verify claims.json` **or** `npx . verify claims.json`
+```bash
+npm install && npm run build
+```
 
-Optional skill/hook/CI shells call the **same CLI**; product hooks are adapters around `verify`, not a separate product surface.
+You do **not** reinstall every agent turn. (A global `npm i -g upheld` path comes with a tagged release — not claimable yet.)
+
+### 2. Write claims
+
+```bash
+npx . init
+# or author .upheld/claims.json / claims.json yourself — see Supported Claim Types
+```
+
+### 3. Verify
+
+```bash
+node dist/bin.js verify claims.json
+# or: npx . verify claims.json
+```
+
+Optional automation (skill instructions, stop-hook, or CI) shells the **same** CLI — nothing magic intercepts the model.
 
 ---
 
@@ -295,7 +310,8 @@ Check out our comprehensive step-by-step walkthrough and runnable use case suite
 ---
 ## Integrations
 
-Product hooks are optional adapters around the same CLI; open/DIY loops do not need them.
+Primary path is the harness-agnostic CLI above. Product-specific hooks are **optional adapters**.
+
 
 ### Pre-Commit Hooks (Husky / Lefthook)
 Ensure agent and developer claims are upheld before code is committed. See [`examples/pre-commit/`](./examples/pre-commit/).
