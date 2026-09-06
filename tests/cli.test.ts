@@ -179,3 +179,39 @@ describe('Pre-commit Hook Script', () => {
     }
   });
 });
+
+describe('Transcript Extraction CLI', () => {
+  const fixturesDir = resolve(__dirname, '../examples/fixtures');
+
+  it('runs upheld extract on transcript fixture and outputs valid claims json', async () => {
+    const outPath = resolve(fixturesDir, 'temp-extracted.json');
+    if (existsSync(outPath)) {
+      unlinkSync(outPath);
+    }
+
+    const code = await runCli([
+      'extract',
+      resolve(fixturesDir, 'transcript-claude-honest.jsonl'),
+      '--out',
+      outPath,
+    ]);
+    expect(code).toBe(0);
+    expect(existsSync(outPath)).toBe(true);
+
+    // Verify the extracted claims file
+    const verifyCode = await runCli([
+      'verify',
+      outPath,
+      '--cwd',
+      resolve(__dirname, '..'),
+      '--no-unclaimed',
+      '--since',
+      '0',
+    ]);
+    expect(verifyCode).toBe(0);
+
+    if (existsSync(outPath)) {
+      unlinkSync(outPath);
+    }
+  });
+});

@@ -70,12 +70,13 @@ When executed, Upheld evaluates agent claims against on-disk and execution recei
 
 ## Features
 
+- **Transcript Claim Extraction (Best-effort / Opt-in)**: Heuristically parses Claude Code and Cursor tool logs (JSONL, JSON, or plain text transcripts) to extract `tests_pass` and `file_written` claims. Note: extraction relies on pattern matching and heuristic parsing; it is best-effort and does not guarantee perfect NLP parsing accuracy across arbitrary unstructured text.
 - **Empirical Re-run**: Re-runs claimed test commands (`pytest`, `vitest`, `jest`, or arbitrary shell commands) and compares parsed outputs (passed/failed/total counts and exit status) to what was claimed.
 - **File Artifact Verification**: Checks for write evidence that claimed file paths were created or modified during the run via git status (`M`, `A`, `??`) or modification time (`mtime`) against `--since`; pre-existing untouched files evaluate to unmet.
 - **Unclaimed Change Detection**: Identifies files modified or created in git that were never claimed by the agent.
 - **Machine-Readable Output**: Emits structured JSON (`--format json` / `--json`) or Markdown (`--format markdown` / `--markdown`) for downstream tools.
 - **GitHub Check Run Integration**: Automatically posts or updates a Check Run named **"Upheld — Claims vs evidence"** when `GITHUB_TOKEN` and `GITHUB_SHA` are present (`--github-check`).
-- **Harness Agnostic**: Evaluates JSON claims from any producer or agent workflow (Claude Code, Cursor, Codex, OpenHands, Aider, custom CI/CD pipelines, or standalone CLIs).
+- **Harness Agnostic**: Works with JSON claims documents or extracted transcripts from any producer or agent framework.
 - **Report & Strict Modes**:
   - **Report Mode (default)**: Emits a structured Claims vs Evidence table and exits `0` for transparent observation.
   - **Strict Mode (`--strict`)**: Exits with a non-zero code if any claim is unmet or fails.
@@ -195,6 +196,20 @@ node dist/bin.js verify --watch path/to/claims.json
 npx . verify -w path/to/claims.json
 ```
 
+### Extract Claims from Agent Transcripts (Best-effort / Opt-in)
+Parse Claude Code or Cursor logs (JSONL, JSON arrays, or text):
+```bash
+# Extract to a claims.json file
+node dist/bin.js extract agent-transcript.jsonl --out claims.json
+# or
+npx . extract agent-transcript.jsonl --out claims.json
+
+# Extract from stdin and pipe directly to verify
+cat transcript.jsonl | node dist/bin.js extract | node dist/bin.js verify
+# or
+cat transcript.jsonl | npx . extract | npx . verify
+```
+
 ### Verify Claims from a File
 ```bash
 node dist/bin.js verify path/to/claims.json
@@ -239,7 +254,7 @@ pre-commit:
 ```
 
 ### Claude Code Stop-Hook
-Upheld can run as a Claude Code Stop-hook to verify an agent's claims before concluding a session. See [`examples/claude-code-hook/`](./examples/claude-code-hook/) for setup and scripts.
+Upheld can run as a Claude Code Stop-hook to extract claims from the session transcript and verify them before concluding a session. See [`examples/claude-code-hook/`](./examples/claude-code-hook/) for setup and scripts.
 
 ### GitHub Actions
 To verify claims in CI, run the built CLI directly or invoke local verify steps:
