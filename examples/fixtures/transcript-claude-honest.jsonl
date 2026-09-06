@@ -1,4 +1,4 @@
-{"type":"tool_use","name":"Write","input":{"path":"README.md","contents":"# Upheld\n"}}
-{"type":"tool_use","name":"Write","input":{"path":"package.json","contents":"{\n  \"name\": \"upheld\"\n}\n"}}
-{"type":"tool_use","name":"Bash","input":{"command":"node -e 'console.log(\"Tests 2 passed (2)\"); process.exit(0);'"},"output":"Tests  2 passed (2)\nDuration: 100ms"}
-{"role":"assistant","content":"I have written the README.md and package.json files, and verified that all tests passed with `node -e 'console.log(\"Tests 2 passed (2)\"); process.exit(0);'`."}
+{"type":"tool_use","name":"Write","input":{"path":"examples/sample-project/src/math.ts","contents":"export function add(a, b) { return a + b; }\n"}}
+{"type":"tool_use","name":"Write","input":{"path":"examples/sample-project/tests/math.test.ts","contents":"import { describe, it } from 'vitest';\n"}}
+{"type":"tool_use","name":"Bash","input":{"command":"npx vitest run --config examples/sample-project/vitest.config.ts"},"output":"Tests  2 passed (2)\nDuration: 100ms"}
+{"role":"assistant","content":"I have written the math module and tests, and verified that all tests passed with `npx vitest run --config examples/sample-project/vitest.config.ts` (2 passed, 0 failed)."}

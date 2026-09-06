@@ -2,19 +2,19 @@
   {
     "tool_name": "write_file",
     "parameters": {
-      "file_path": "README.md"
+      "file_path": "examples/sample-project/src/math.ts"
     }
   },
   {
     "tool_name": "edit_file",
     "parameters": {
-      "target_file": "package.json"
+      "target_file": "examples/sample-project/tests/math.test.ts"
     }
   },
   {
     "tool_name": "terminal",
     "parameters": {
-      "cmd": "node -e 'console.log(\"Tests 2 passed (2)\"); process.exit(0);'"
+      "cmd": "npx vitest run --config examples/sample-project/vitest.config.ts"
     },
     "result": "Tests  2 passed (2)"
   }

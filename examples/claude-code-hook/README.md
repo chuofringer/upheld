@@ -37,10 +37,10 @@ Or configure Claude Code hooks in `.claude/settings.json`:
 
 ### 2. Transcript Extraction or Explicit Claims
 
-You can either extract claims directly from transcript logs:
+You can either extract claims directly from transcript logs (best-effort / opt-in):
 ```bash
 # Extract claims from transcript log and pipe directly to verify
-cat .claude/transcript.jsonl | upheld extract | upheld verify
+cat .claude/transcript.jsonl | npx . extract | npx . verify
 ```
 
 Or instruct the agent to write empirical claims to `.claude/claims.json` before concluding:

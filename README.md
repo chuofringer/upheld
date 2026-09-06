@@ -70,7 +70,7 @@ When executed, Upheld evaluates agent claims against on-disk and execution recei
 
 ## Features
 
-- **Transcript Claim Extraction**: Automatically parses Claude Code and Cursor tool logs (JSONL, JSON, or plain text transcripts) to extract `tests_pass` and `file_written` claims.
+- **Transcript Claim Extraction (Best-effort / Opt-in)**: Heuristically parses Claude Code and Cursor tool logs (JSONL, JSON, or plain text transcripts) to extract `tests_pass` and `file_written` claims. Note: extraction relies on pattern matching and heuristic parsing; it is best-effort and does not guarantee perfect NLP parsing accuracy across arbitrary unstructured text.
 - **Empirical Re-run**: Re-runs claimed test commands (`pytest`, `vitest`, `jest`, or arbitrary shell commands) and compares parsed outputs (passed/failed/total counts and exit status) to what was claimed.
 - **File Artifact Verification**: Checks for write evidence that claimed file paths were created or modified during the run via git status (`M`, `A`, `??`) or modification time (`mtime`) against `--since`; pre-existing untouched files evaluate to unmet.
 - **Unclaimed Change Detection**: Identifies files modified or created in git that were never claimed by the agent.
@@ -174,7 +174,6 @@ Options:
   node dist/bin.js verify claims.json --strict
   ```
 
-<<<<<<< HEAD
 ### Bootstrap Configuration (`init`)
 Quickly bootstrap an `.upheld` directory with template claims, a Claude Code Stop-hook script, and a README:
 
@@ -197,14 +196,18 @@ node dist/bin.js verify --watch path/to/claims.json
 npx . verify -w path/to/claims.json
 ```
 
-### Extract Claims from Agent Transcripts
+### Extract Claims from Agent Transcripts (Best-effort / Opt-in)
 Parse Claude Code or Cursor logs (JSONL, JSON arrays, or text):
 ```bash
 # Extract to a claims.json file
-upheld extract agent-transcript.jsonl --out claims.json
+node dist/bin.js extract agent-transcript.jsonl --out claims.json
+# or
+npx . extract agent-transcript.jsonl --out claims.json
 
 # Extract from stdin and pipe directly to verify
-cat transcript.jsonl | upheld extract | upheld verify
+cat transcript.jsonl | node dist/bin.js extract | node dist/bin.js verify
+# or
+cat transcript.jsonl | npx . extract | npx . verify
 ```
 
 ### Verify Claims from a File

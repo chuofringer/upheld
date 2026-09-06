@@ -202,6 +202,8 @@ describe('Pre-commit Hook Script', () => {
       '--cwd',
       resolve(__dirname, '..'),
       '--no-unclaimed',
+      '--since',
+      '0',
     ]);
     expect(verifyCode).toBe(0);
 

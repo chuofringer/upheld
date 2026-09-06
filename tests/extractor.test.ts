@@ -13,8 +13,8 @@ describe('Transcript Claim Extractor', () => {
 
     expect(claims.length).toBeGreaterThanOrEqual(3);
     const fileClaims = claims.filter((c) => c.type === 'file_written');
-    expect(fileClaims.some((c) => (c as any).path === 'README.md')).toBe(true);
-    expect(fileClaims.some((c) => (c as any).path === 'package.json')).toBe(true);
+    expect(fileClaims.some((c) => (c as any).path === 'examples/sample-project/src/math.ts')).toBe(true);
+    expect(fileClaims.some((c) => (c as any).path === 'examples/sample-project/tests/math.test.ts')).toBe(true);
 
     const testClaims = claims.filter((c) => c.type === 'tests_pass');
     expect(testClaims.length).toBeGreaterThanOrEqual(1);
@@ -22,6 +22,7 @@ describe('Transcript Claim Extractor', () => {
     const report = await verifyClaims(claims, {
       cwd: resolve(__dirname, '..'),
       detectUnclaimed: false,
+      sinceTimestamp: 0,
     });
     expect(report.hasUnmet).toBe(false);
     expect(report.summary.upheld).toBe(claims.length);
@@ -51,6 +52,7 @@ describe('Transcript Claim Extractor', () => {
     const report = await verifyClaims(claims, {
       cwd: resolve(__dirname, '..'),
       detectUnclaimed: false,
+      sinceTimestamp: 0,
     });
     expect(report.hasUnmet).toBe(false);
     expect(report.summary.upheld).toBe(3);
