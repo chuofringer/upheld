@@ -1,0 +1,23 @@
+{
+  "version": "1.0",
+  "claims": [
+    {
+      "type": "file_written",
+      "path": "src/types.ts",
+      "description": "Core types definition file"
+    },
+    {
+      "type": "file_written",
+      "path": "src/generated/non_existent_client.ts",
+      "description": "Hallucinated SDK client file"
+    },
+    {
+      "type": "tests_pass",
+      "cmd": "node -e 'console.log(\"Tests  1 failed | 5 passed (6)\"); process.exit(1);'",
+      "passed": 6,
+      "failed": 0,
+      "total": 6,
+      "description": "Agent claimed 6 tests passed when 1 failed"
+    }
+  ]
+}

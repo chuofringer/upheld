@@ -1,0 +1,10 @@
+{
+  "version": "1.0",
+  "claims": [
+    {
+      "type": "file_written",
+      "path": "src/services/auth-token-validator.ts",
+      "description": "Agent claims to have created auth token validator module"
+    }
+  ]
+}

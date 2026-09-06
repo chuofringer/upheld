@@ -1,0 +1,12 @@
+{
+  "version": "1.0",
+  "claims": [
+    {
+      "type": "tests_pass",
+      "cmd": "node -e 'console.log(\"Ran 0 tests in 0.001s\"); process.exit(0);'",
+      "passed": 12,
+      "total": 12,
+      "description": "Agent claimed 12 tests passed but filter pattern matched 0 tests"
+    }
+  ]
+}

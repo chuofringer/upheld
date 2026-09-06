@@ -28,6 +28,7 @@
     "watch": "tsc --watch",
     "test": "vitest run",
     "test:watch": "vitest",
+    "corpus": "vitest run tests/corpus.test.ts",
     "prepublishOnly": "npm run build"
   },
   "keywords": [
