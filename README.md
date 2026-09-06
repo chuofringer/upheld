@@ -190,10 +190,9 @@ Upheld — Claims vs Evidence
 =====================
 ---
 
-## Integrations
+## Integrations (Planned / Scaffold Tip)
 
-### Claude Code Stop-Hook
-Upheld integrates directly as a Claude Code Stop-hook to verify agent claims before concluding an automated session. See [`examples/claude-code-hook/`](./examples/claude-code-hook/) for setup and scripts.
+> **Note**: Example hook scripts and the GitHub Actions composite action land with the scaffold PR ([#1](https://github.com/chuofringer/upheld/pull/1)). Once merged to `main`, the following workflows become available:
 
 ### GitHub Actions
 To verify claims in CI, run the built CLI directly or invoke local verify steps:
