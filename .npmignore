@@ -1,0 +1,13 @@
+# Source files and tests
+src/
+tests/
+examples/
+.github/
+
+# Development / Config files
+tsconfig.json
+vitest.config.ts
+.gitignore
+*.log
+coverage/
+.DS_Store

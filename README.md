@@ -13,7 +13,7 @@ Agents often claim they performed tasks, passed test suites, or wrote specific f
 - **Empirical Re-run**: Re-runs claimed test commands (`pytest`, `vitest`, `jest`, or arbitrary shell commands) and compares parsed outputs (passed/failed/total counts and exit status) to what was claimed.
 - **File Artifact Verification**: Checks for write evidence that claimed file paths were created or modified during the run via git status (`M`, `A`, `??`) or modification time (`mtime`) against `--since`; pre-existing untouched files evaluate to unmet.
 - **Unclaimed Change Detection**: Identifies files modified or created in git that were never claimed by the agent.
-- **Harness Agnostic**: Works with Claude Code, Cursor, Codex, OpenHands, Aider, custom CI/CD pipelines, or standalone CLIs.
+- **Harness Agnostic**: Evaluates JSON claims from any producer or agent workflow.
 - **Report & Strict Modes**:
   - **Report Mode (default)**: Emits a structured Claims vs Evidence table and exits `0` for transparent observation.
   - **Strict Mode (`--strict`)**: Exits with a non-zero code if any claim is unmet or fails.
@@ -162,6 +162,26 @@ See [`examples/corpus/`](./examples/corpus/) and run the corpus validation suite
 
 ```bash
 npm run corpus
+```
+
+---
+
+## Publishing (Maintainers Only / Dry-Run Verification)
+
+> **Notice:** Publishing to npm is restricted to repository owners / maintainers (`@chuofringer`) and is planned for a future release. Upheld is not yet published to npm.
+
+To verify the package contents that will be included in future releases via dry-run:
+
+```bash
+npm pack --dry-run
+```
+
+When ready for release (maintainers only):
+
+```bash
+npm publish --access public --dry-run
+# Actual publish (owners only upon release):
+# npm publish --access public
 ```
 
 ---
