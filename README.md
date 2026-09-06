@@ -1,10 +1,70 @@
 # Upheld
 
-> **"Claims, upheld."** / **"Done means shown."**
+<p align="center">
+  <strong>Claims, upheld.</strong> &nbsp;|&nbsp; <em>Done means shown.</em>
+</p>
 
-**Upheld** is a harness-agnostic claims-vs-evidence verifier for AI coding agents.
+<p align="center">
+  Harness-agnostic claims-vs-evidence verifier for AI coding agents — matching named claims to deterministic receipts.
+</p>
 
-Agents often claim they performed tasks, passed test suites, or wrote specific files. Upheld independently verifies those claims against empirical ground truth: it re-executes claimed test commands, checks file system artifacts, detects unclaimed git modifications, and renders a clean Claims vs Evidence diff.
+<p align="center">
+  <a href="https://nodejs.org"><img src="https://img.shields.io/badge/node-%3E%3D20.0.0-blue?style=flat-square" alt="Node.js Version" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License" /></a>
+  <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/typescript-5.7+-3178c6?style=flat-square" alt="TypeScript" /></a>
+  <a href="https://github.com/chuofringer/upheld/pulls"><img src="https://img.shields.io/badge/PRs-welcome-orange?style=flat-square" alt="PRs Welcome" /></a>
+</p>
+
+---
+
+## Overview
+
+AI coding agents often assert that tasks are complete with phrases like *"all 18 tests pass"* or *"file updated successfully"*. But asserting is not proving.
+
+**Upheld** is an independent, harness-agnostic verification tool that audits claims made by AI agents against empirical evidence. It independently re-executes tests deterministically, checks for concrete **write and modification evidence** (via git status mutations and modification timestamps against `--since`), flags unacknowledged file mutations, and produces clean audit summaries for developers and CI pipelines.
+
+```
+                     ┌────────────────────────┐
+                     │   AI Coding Agent      │
+                     │  (Claims Output JSON)  │
+                     └──────────┬─────────────┘
+                                │
+                                ▼
+                     ┌────────────────────────┐
+                     │         UPHELD         │
+                     │  Evidence Verification │
+                     └────┬──────────────┬────┘
+                          │              │
+       [Empirical Re-run] │              │ [Git Status & mtime Window]
+                          ▼              ▼
+     ┌────────────────────────┐      ┌────────────────────────┐
+     │  Deterministic Tests   │      │  Write Evidence Audit  │
+     │   Execution & Parse    │      │  & Unclaimed Diff Scan │
+     └────────────┬───────────┘      └────────────┬───────────┘
+                  │                               │
+                  └──────────────┬────────────────┘
+                                 │
+                                 ▼
+                     ┌────────────────────────┐
+                     │  Claims vs. Evidence   │
+                     │     Receipt Table      │
+                     │ (Report Mode / Strict) │
+                     └────────────────────────┘
+```
+
+---
+
+## Claims vs Evidence Audit Table *(Example)*
+
+When executed, Upheld evaluates agent claims against on-disk and execution receipts:
+
+| Status | Claim Type | Claim Details | Empirical Evidence / Receipt | Verdict |
+| :--- | :--- | :--- | :--- | :--- |
+| `UPHELD` | `tests_pass` | `cmd: npm test, passed: 18` | Exit code `0`; 18 passed, 0 failed (1.42s) | **VERIFIED** |
+| `UPHELD` | `file_written` | `path: src/auth/token.ts` | Write evidence verified: modified in git working tree (`M`) & `mtime` >= `--since` | **VERIFIED** |
+| `UNMET` | `tests_pass` | `cmd: pytest tests/, passed: 5` | Re-run exited with code `1` (3 passed, 2 failed in `test_auth.py:44`) | **FAILED** |
+| `UNMET` | `file_written` | `path: src/config/env.ts` | **No write evidence**: file exists on disk but unmodified in git and `mtime` unchanged | **FAILED** |
+| `UNCLAIMED` | `unclaimed_file` | `(none)` | Unclaimed mutation detected in working tree (`M package-lock.json`) | **FLAGGED** |
 
 ---
 
@@ -24,68 +84,87 @@ Agents often claim they performed tasks, passed test suites, or wrote specific f
 
 ## Supported Claim Types
 
+Upheld evaluates structured claims provided as JSON input.
+
 ### 1. `tests_pass`
-Validates that running a test command passes and matches claimed metrics:
+Verifies that a specified test command passes by independently executing it and matching exit codes and test counts (`passed`, `failed`, `total`).
+
 ```json
 {
   "type": "tests_pass",
-  "cmd": "pytest tests/",
-  "passed": 12,
+  "cmd": "npm test -- tests/auth.test.ts",
+  "passed": 8,
   "failed": 0,
-  "total": 12
+  "total": 8
 }
 ```
 
 ### 2. `file_written`
-Validates that a file was created or modified on disk during the run (verified via git status or `--since` window):
+Verifies that a file was **genuinely written or modified during the run**, backed by git working tree mutation signals or modification timestamps within the `--since` window.
+
 ```json
 {
   "type": "file_written",
-  "path": "src/verifier.ts"
+  "path": "src/services/auth.ts"
+}
+```
+
+> ⚠️ **Write Evidence vs. Existence**: If a file exists on disk from an earlier run but was never modified during the current session, Upheld marks the claim as `UNMET`.
+
+### Full Claims File Example (`claims.json`)
+
+```json
+{
+  "agent": "vibecoder-v1",
+  "task": "fix-auth-expiration",
+  "since": "2026-09-05T23:30:00.000Z",
+  "claims": [
+    {
+      "type": "file_written",
+      "path": "src/services/auth.ts"
+    },
+    {
+      "type": "tests_pass",
+      "cmd": "npm test -- tests/auth.test.ts",
+      "passed": 8,
+      "failed": 0,
+      "total": 8
+    }
+  ]
 }
 ```
 
 ---
 
-## Installation & Getting Started
+## CLI Options
 
-> **Note**: Upheld is currently in active development. NPM package publishing is planned for a future release. For now, run Upheld directly from source or via local build.
+```text
+Usage:
+  upheld verify [options] [claims.json]
+  cat claims.json | upheld verify [options]
 
-### Local Setup & Build
-
-```bash
-# Clone the repository
-git clone https://github.com/chuofringer/upheld.git
-cd upheld
-
-# Install dependencies and build
-npm install && npm run build
+Options:
+  --strict             Exit with non-zero code if any claim is unmet (default: exit 0 in report mode)
+  --format <type>      Output format: table (default), markdown, or json
+  --cwd <path>         Working directory to evaluate claims in (default: current directory)
+  --since <timestamp>  Evaluation window start timestamp (ms or ISO date) for file write evidence
+  --no-unclaimed       Disable detection of unclaimed modified/untracked files
+  --json               Shortcut for --format json
+  --markdown           Shortcut for --format markdown
+  --summary            Output GitHub Action job summary format
+  --summary-file <f>   Append job summary to specified file (or $GITHUB_STEP_SUMMARY)
+  -h, --help           Show help message
+  -v, --version        Show version
 ```
-
-### Running Upheld
-
-Run the built CLI directly with Node:
-```bash
-node dist/bin.js verify path/to/claims.json
-```
-
-Or invoke via npx within the local repository:
-```bash
-npx . verify path/to/claims.json
-```
-
-Requirements: Node.js >= 20.0.0
 
 ---
 
-## CLI Usage
+## Execution Modes
 
-### Verify Claims from a File
-```bash
-node dist/bin.js verify path/to/claims.json
-# or
-npx . verify path/to/claims.json
-```
+- **Report Mode (Default)**: Inspects empirical evidence, outputs the audit table to stdout and `$GITHUB_STEP_SUMMARY` if available, and exits with code `0`. Ideal for exploratory workflows and agent post-run reviews.
+  ```bash
+  node dist/bin.js verify claims.json
+  ```
 
 ### Verify Claims via Standard Input
 ```bash
@@ -108,29 +187,12 @@ cat claims.json | npx . verify
 
 ```
 Upheld — Claims vs Evidence
-============================
-
-Status   | Claim Type    | Claim                          | Evidence
----------+---------------+--------------------------------+------------------------------------------
-UPHELD   | file_written  | path: README.md                | exists (size: 2150 B, modified/created)
-UPHELD   | file_written  | path: package.json             | exists (size: 950 B, modified/created)
-UPHELD   | tests_pass    | cmd: npm test, passed: 18      | exit: 0, passed: 18, failed: 0, total: 18
-UNMET    | tests_pass    | cmd: pytest, passed: 5         | exit: 1, passed: 3, failed: 2, total: 5
-UNCLAIMED| unclaimed_file| (none)                         | unclaimed file written/modified: temp.log
-
-Summary:
-  Upheld:    3
-  Unmet:     1
-  Unclaimed: 1
-  Total:     5
-```
-
+=====================
 ---
 
-## Integrations
+## Integrations (Planned / Scaffold Tip)
 
-### Claude Code Stop-Hook
-Upheld can run as a Claude Code Stop-hook to verify an agent's claims before concluding a session. See [`examples/claude-code-hook/`](./examples/claude-code-hook/) for setup and scripts.
+> **Note**: Example hook scripts and the GitHub Actions composite action land with the scaffold PR ([#1](https://github.com/chuofringer/upheld/pull/1)). Once merged to `main`, integration workflows will become available:
 
 ### GitHub Actions
 To verify claims in CI, run the built CLI directly or invoke local verify steps:
@@ -146,13 +208,13 @@ To verify claims in CI, run the built CLI directly or invoke local verify steps:
 
 ---
 
-## Development
+## Why Upheld?
 
-```bash
-npm install
-npm run build
-npm test
-```
+Most coding agent harnesses rely either on:
+1. **Self-reported completion**: The agent declares *"I ran the tests and they passed"*, leading to false positives, silent omissions, and hallucinated success.
+2. **Heavyweight finish-review blockers**: Rigid, monolithic review gates that freeze agent workflows or demand proprietary orchestrators.
+
+Upheld provides a lightweight, focused wedge: **deterministic receipt verification**. It doesn't care how the agent was prompted or what model produced the code — it only verifies whether the agent's explicit claims match verifiable, reproducible facts on disk and in execution.
 
 ## False-Completion Corpus
 
@@ -188,4 +250,8 @@ npm publish --access public --dry-run
 
 ## License
 
-MIT © [vibemapper](https://github.com/chuofringer/upheld)
+Distributed under the MIT License. See [LICENSE](LICENSE) for details.
+
+<p align="center">
+  <sub>Built by <strong>vibemapper</strong> · Claims, upheld.</sub>
+</p>
