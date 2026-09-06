@@ -134,6 +134,121 @@ export function formatGitHubJobSummary(report: VerifyReport): string {
   return lines.join('\n');
 }
 
+export function formatSarifReport(report: VerifyReport): string {
+  const unmetResults = report.results.filter((r) => r.status === 'unmet');
+
+  // Rule definitions for claim types
+  const rulesMap = new Map<string, { id: string; name: string; shortDescription: { text: string }; defaultConfiguration: { level: string } }>();
+
+  rulesMap.set('tests_pass', {
+    id: 'tests_pass',
+    name: 'TestsPassClaimUnmet',
+    shortDescription: {
+      text: 'Claimed test command failed or observed metrics mismatched claimed metrics.',
+    },
+    defaultConfiguration: {
+      level: 'error',
+    },
+  });
+
+  rulesMap.set('file_written', {
+    id: 'file_written',
+    name: 'FileWrittenClaimUnmet',
+    shortDescription: {
+      text: 'Claimed file was not found or has no evidence of write/change during the run.',
+    },
+    defaultConfiguration: {
+      level: 'error',
+    },
+  });
+
+  const activeRuleIds = new Set(unmetResults.map((r) => r.type));
+  const activeRules = Array.from(activeRuleIds)
+    .map((type) => {
+      if (rulesMap.has(type)) {
+        return rulesMap.get(type)!;
+      }
+      return {
+        id: type,
+        name: `${type}Unmet`,
+        shortDescription: {
+          text: `Claim of type '${type}' was unmet.`,
+        },
+        defaultConfiguration: {
+          level: 'error',
+        },
+      };
+    });
+
+  const sarifResults = unmetResults.map((r) => {
+    const messageText = r.details || `${r.claimSummary} was unmet (${r.evidenceSummary})`;
+    const resultObj: {
+      ruleId: string;
+      level: 'error' | 'warning' | 'note';
+      message: { text: string };
+      locations?: Array<{
+        physicalLocation: {
+          artifactLocation: { uri: string; uriBaseId?: string };
+          region: { startLine: number; startColumn?: number };
+        };
+      }>;
+    } = {
+      ruleId: r.type,
+      level: 'error',
+      message: {
+        text: messageText,
+      },
+    };
+
+    // Extract path if available from file_written claim or claim object
+    let filePath: string | undefined;
+    if (r.claim && r.claim.type === 'file_written' && r.claim.path) {
+      filePath = r.claim.path;
+    }
+
+    if (filePath) {
+      // Normalize relative path if possible
+      const normalizedPath = filePath.replace(/\\/g, '/').replace(/^\.\//, '');
+      resultObj.locations = [
+        {
+          physicalLocation: {
+            artifactLocation: {
+              uri: normalizedPath,
+              uriBaseId: '%SRCROOT%',
+            },
+            region: {
+              startLine: 1,
+              startColumn: 1,
+            },
+          },
+        },
+      ];
+    }
+
+    return resultObj;
+  });
+
+  const sarif = {
+    $schema: 'https://json.schemastore.org/sarif-2.1.0.json',
+    version: '2.1.0',
+    runs: [
+      {
+        tool: {
+          driver: {
+            name: 'upheld',
+            version: '0.0.1',
+            informationUri: 'https://github.com/chuofringer/upheld',
+            rules: activeRules,
+          },
+        },
+        results: sarifResults,
+      },
+    ],
+  };
+
+  return JSON.stringify(sarif, null, 2);
+}
+
 function formatStatusLabel(status: string): string {
   switch (status) {
     case 'upheld':

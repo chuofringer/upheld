@@ -87,6 +87,8 @@ export interface VerifyReport {
   hasUnmet: boolean;
 }
 
+export type OutputFormat = 'table' | 'markdown' | 'json' | 'sarif';
+
 export interface VerifyOptions {
   cwd?: string;
   strict?: boolean;

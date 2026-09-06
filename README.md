@@ -80,6 +80,7 @@ When executed, Upheld evaluates agent claims against on-disk and execution recei
 - **Report & Strict Modes**:
   - **Report Mode (default)**: Emits a structured Claims vs Evidence table and exits `0` for transparent observation.
   - **Strict Mode (`--strict`)**: Exits with a non-zero code if any claim is unmet or fails.
+- **SARIF & GitHub Code Scanning**: Output standard SARIF 2.1.0 (`--format sarif` or `--sarif`) mapping unmet claims to SARIF results for GitHub Code Scanning and VS Code Problems.
 - **GitHub Actions & Job Summary**: Automatically renders Markdown job summaries in `$GITHUB_STEP_SUMMARY`.
 - **Lightweight & Honest**: Minimal footprint, zero external bloat, Node 20+.
 
