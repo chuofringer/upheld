@@ -9,6 +9,10 @@
 </p>
 
 <p align="center">
+  Website → <a href="https://vibemapper.dev">vibemapper.dev</a>
+</p>
+
+<p align="center">
   <a href="https://nodejs.org"><img src="https://img.shields.io/badge/node-%3E%3D20.0.0-blue?style=flat-square" alt="Node.js Version" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License" /></a>
   <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/typescript-5.7+-3178c6?style=flat-square" alt="TypeScript" /></a>
