@@ -18,8 +18,8 @@ export const CLAIMS_EXAMPLE_JSON = `{
   "claims": [
     {
       "type": "file_written",
-      "path": "README.md",
-      "description": "Project documentation updated"
+      "path": "src/example.ts",
+      "description": "Project implementation file created/modified"
     },
     {
       "type": "tests_pass",
