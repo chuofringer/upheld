@@ -31,34 +31,22 @@ AI coding agents often assert that tasks are complete with phrases like *"all 18
 
 **Upheld** is an independent, harness-agnostic verification tool that audits claims made by AI agents against empirical evidence. It independently re-executes tests deterministically, checks for concrete **write and modification evidence** (via git status mutations and modification timestamps against `--since`), flags unacknowledged file mutations, and produces clean audit summaries for developers and CI pipelines.
 
-```
-                     ┌────────────────────────┐
-                     │   AI Coding Agent      │
-                     │  (Claims Output JSON)  │
-                     └──────────┬─────────────┘
-                                │
-                                ▼
-                     ┌────────────────────────┐
-                     │         UPHELD         │
-                     │  Evidence Verification │
-                     └────┬──────────────┬────┘
-                          │              │
-       [Empirical Re-run] │              │ [Git Status & mtime Window]
-                          ▼              ▼
-     ┌────────────────────────┐      ┌────────────────────────┐
-     │  Deterministic Tests   │      │  Write Evidence Audit  │
-     │   Execution & Parse    │      │  & Unclaimed Diff Scan │
-     └────────────┬───────────┘      └────────────┬───────────┘
-                  │                               │
-                  └──────────────┬────────────────┘
-                                 │
-                                 ▼
-                     ┌────────────────────────┐
-                     │  Claims vs. Evidence   │
-                     │     Receipt Table      │
-                     │ (Report Mode / Strict) │
-                     └────────────────────────┘
-```
+## Quick Start
+
+**Upheld** is a CLI for any harness. Open/DIY loops (OpenCode, Aider, custom shells, CI) get the most leverage from the same verifier — no proprietary orchestrator required.
+
+<p align="center">
+  <img src="docs/brand/upheld-quickstart-flow.png" alt="Upheld Quick Start flow" width="900" />
+</p>
+
+Three steps claimable today:
+
+1. **Install once (not every turn):** `npm install && npm run build`  
+   *(Global `npm install -g` is not claimable yet — Upheld is not published to npm.)*
+2. **Bootstrap or author claims:** `npx . init` or write a `claims.json` — see [Supported Claim Types](#supported-claim-types).
+3. **Verify:** `node dist/bin.js verify claims.json` **or** `npx . verify claims.json`
+
+Optional skill/hook/CI shells call the **same CLI**; product hooks are adapters around `verify`, not a separate product surface.
 
 ---
 
@@ -307,6 +295,8 @@ Check out our comprehensive step-by-step walkthrough and runnable use case suite
 ---
 ## Integrations
 
+Product hooks are optional adapters around the same CLI; open/DIY loops do not need them.
+
 ### Pre-Commit Hooks (Husky / Lefthook)
 Ensure agent and developer claims are upheld before code is committed. See [`examples/pre-commit/`](./examples/pre-commit/).
 
@@ -325,13 +315,13 @@ pre-commit:
       run: test -f .upheld/claims.json && npx . verify --strict .upheld/claims.json || true
 ```
 
-### Claude Code Stop-Hook
+### Optional adapter: Claude Code Stop-Hook
 Upheld can run as a Claude Code Stop-hook to extract claims from the session transcript and verify them before concluding a session. See [`examples/claude-code-hook/`](./examples/claude-code-hook/) for setup and scripts.
 
-### Codex CLI Session Hook
+### Optional adapter: Codex CLI Session Hook
 Extract and verify claims from Codex CLI sessions and tool events. See [`examples/codex-hook/`](./examples/codex-hook/) for adapters and setup.
 
-### OpenCode Session Hook
+### Optional adapter: OpenCode Session Hook
 Normalize tool events from OpenCode sessions into Upheld claims. See [`examples/opencode-hook/`](./examples/opencode-hook/) for adapters and setup.
 
 ### GitHub Actions
