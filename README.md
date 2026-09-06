@@ -85,6 +85,20 @@ When executed, Upheld evaluates agent claims against on-disk and execution recei
 
 ---
 
+## Documentation
+
+Explore the in-depth documentation in [`docs/`](./docs/):
+
+- [Documentation Index](./docs/README.md)
+- [Problem Statement & Motivation](./docs/problem-statement.md): Why autonomous coding agents hallucinate success and how Upheld provides ground truth.
+- [How Verification Works](./docs/how-verify-works.md): Architecture, claims schema, test runner parsing, write evidence verification, and unclaimed change detection.
+- [Honesty Rules & Taxonomy](./docs/honesty-rules.md): Verification status taxonomy (`upheld`, `unmet`, `unclaimed`) and integrity principles.
+- [Claude Code Hook Integration](./docs/claude-code-hook.md): Step-by-step guide for Claude Code Stop-hooks and self-correction loops.
+- [CI/CD Integration Guide](./docs/ci-guide.md): Setting up GitHub Actions, GitLab CI, CircleCI, PR comments, and job summaries.
+- [Upheld vs AI PR Reviewers](./docs/comparison-vs-ai-pr-review.md): Why empirical re-execution differs fundamentally from passive diff-reading (CodeRabbit, Copilot).
+
+---
+
 ## Supported Claim Types
 
 Upheld evaluates structured claims provided as JSON input.
