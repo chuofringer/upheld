@@ -2,6 +2,7 @@ import { readFileSync, appendFileSync } from 'node:fs';
 import { parseClaimsJson, readClaimsFromFile } from './claims.js';
 import { verifyClaims } from './verifier.js';
 import { formatGitHubJobSummary, formatMarkdownSummary, formatTerminalTable } from './formatter.js';
+import { initProject } from './init.js';
 import { Claim, VerifyOptions } from './types.js';
 
 function printHelp(): void {
@@ -10,10 +11,20 @@ Upheld — Claims vs Evidence Verifier for AI Coding Agents
 "Claims, upheld." / "Done means shown."
 
 Usage:
+  upheld init [options]
   upheld verify [options] [claims.json]
   cat claims.json | upheld verify [options]
 
-Options:
+Commands:
+  init                 Bootstrap an .upheld configuration directory
+  verify               Verify claims against empirical ground truth (default)
+
+Init Options:
+  --github-action      Drop a starter GitHub Action workflow (.github/workflows/upheld.yml)
+  --force              Overwrite existing files
+  --cwd <path>         Target working directory (default: current directory)
+
+Verify Options:
   --strict             Exit with non-zero code if any claim is unmet (default: exit 0 in report mode)
   --format <type>      Output format: table (default), markdown, or json
   --cwd <path>         Working directory to evaluate claims in (default: current directory)
@@ -23,6 +34,8 @@ Options:
   --markdown           Shortcut for --format markdown
   --summary            Output GitHub Action job summary format
   --summary-file <f>   Append job summary to specified file (or $GITHUB_STEP_SUMMARY)
+
+General Options:
   -h, --help           Show this help message
   -v, --version        Show version
 `);
@@ -71,6 +84,8 @@ export async function runCli(args: string[] = process.argv.slice(2)): Promise<nu
   let command = 'verify';
   let fileArg: string | undefined;
   let strict = false;
+  let force = false;
+  let githubAction = false;
   let format: 'table' | 'markdown' | 'json' = 'table';
   let cwd = process.cwd();
   let sinceTimestamp: number | undefined;
@@ -80,10 +95,16 @@ export async function runCli(args: string[] = process.argv.slice(2)): Promise<nu
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
-    if (arg === 'verify') {
+    if (arg === 'init') {
+      command = 'init';
+    } else if (arg === 'verify') {
       command = 'verify';
     } else if (arg === '--strict') {
       strict = true;
+    } else if (arg === '--force') {
+      force = true;
+    } else if (arg === '--github-action') {
+      githubAction = true;
     } else if (arg === '--json') {
       format = 'json';
     } else if (arg === '--markdown') {
@@ -122,6 +143,29 @@ export async function runCli(args: string[] = process.argv.slice(2)): Promise<nu
       }
     } else if (!arg.startsWith('-')) {
       fileArg = arg;
+    }
+  }
+
+  if (command === 'init') {
+    try {
+      const result = initProject({
+        cwd,
+        force,
+        githubAction,
+      });
+
+      console.log(`Initialized Upheld configuration in ${result.targetDir}`);
+      for (const created of result.createdFiles) {
+        console.log(`  + Created: ${created}`);
+      }
+      for (const skipped of result.skippedFiles) {
+        console.log(`  - Skipped (already exists, use --force to overwrite): ${skipped}`);
+      }
+      return 0;
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(`Error initializing project: ${message}`);
+      return 1;
     }
   }
 

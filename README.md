@@ -166,28 +166,38 @@ Options:
   node dist/bin.js verify claims.json
   ```
 
+- **Strict Mode (`--strict`)**: Enforces deterministic integrity by exiting with status `1` whenever any claim is unmet, tests fail, or counts mismatch.
+  ```bash
+  node dist/bin.js verify claims.json --strict
+  ```
+
+### Bootstrap Configuration (`init`)
+Quickly bootstrap an `.upheld` directory with template claims, a Claude Code Stop-hook script, and a README:
+
+```bash
+node dist/bin.js init
+# or
+npx . init
+```
+
+Options:
+- `--github-action`: Also create a starter GitHub Action workflow at `.github/workflows/upheld.yml`.
+- `--force`: Overwrite existing files (by default, existing files are skipped).
+- `--cwd <dir>`: Target working directory (default: current directory).
+
+### Verify Claims from a File
+```bash
+node dist/bin.js verify path/to/claims.json
+# or
+npx . verify path/to/claims.json
+```
+
 ### Verify Claims via Standard Input
 ```bash
 cat claims.json | node dist/bin.js verify
 # or
 cat claims.json | npx . verify
 ```
-
-### Options
-- `--strict`: Exit non-zero if any claim is unmet.
-- `--format <table|markdown|json>`: Choose output format (`--json` and `--markdown` are shortcuts).
-- `--cwd <dir>`: Set working directory for evaluation.
-- `--since <timestamp>`: Evaluation window start timestamp (ms or ISO date) for file writes.
-- `--no-unclaimed`: Disable git status unclaimed file detection.
-- `--summary`: Output GitHub Action job summary format.
-
----
-
-## Sample Output
-
-```
-Upheld — Claims vs Evidence
-=====================
 ---
 
 ## Integrations (Planned / Scaffold Tip)
