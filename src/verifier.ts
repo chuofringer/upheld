@@ -20,6 +20,7 @@ export async function verifyClaims(
       const claimParts: string[] = [`cmd: ${claim.cmd}`];
       if (claim.passed !== undefined) claimParts.push(`passed: ${claim.passed}`);
       if (claim.failed !== undefined) claimParts.push(`failed: ${claim.failed}`);
+      if (claim.skipped !== undefined) claimParts.push(`skipped: ${claim.skipped}`);
       if (claim.total !== undefined) claimParts.push(`total: ${claim.total}`);
       const claimSummary = claimParts.join(', ');
 
@@ -32,6 +33,7 @@ export async function verifyClaims(
       const evidenceParts: string[] = [`exit: ${execution.exitCode}`];
       if (execution.passed !== undefined) evidenceParts.push(`passed: ${execution.passed}`);
       if (execution.failed !== undefined) evidenceParts.push(`failed: ${execution.failed}`);
+      if (execution.skipped !== undefined) evidenceParts.push(`skipped: ${execution.skipped}`);
       if (execution.total !== undefined) evidenceParts.push(`total: ${execution.total}`);
       const evidenceSummary = evidenceParts.join(', ');
 
@@ -39,15 +41,24 @@ export async function verifyClaims(
       let upheld = true;
       let details: string | undefined;
 
+      const hasMetrics = execution.passed !== undefined || execution.failed !== undefined || execution.skipped !== undefined || execution.total !== undefined;
+      if (!hasMetrics) {
+        upheld = false;
+        details = 'Command output could not be parsed for test metrics (unparsed output)';
+      }
+
       if (execution.exitCode !== 0) {
         upheld = false;
-        details = `Command exited with non-zero code ${execution.exitCode}`;
+        details = details
+          ? `${details}; Command exited with non-zero code ${execution.exitCode}`
+          : `Command exited with non-zero code ${execution.exitCode}`;
       }
 
       // Check if claims included counts that could not be extracted from output
-      const countsClaimed = claim.passed !== undefined || claim.failed !== undefined || claim.total !== undefined;
+      const countsClaimed = claim.passed !== undefined || claim.failed !== undefined || claim.skipped !== undefined || claim.total !== undefined;
       const countsMissing = (claim.passed !== undefined && execution.passed === undefined) ||
                             (claim.failed !== undefined && execution.failed === undefined) ||
+                            (claim.skipped !== undefined && execution.skipped === undefined) ||
                             (claim.total !== undefined && execution.total === undefined);
 
       if (countsClaimed && countsMissing) {
@@ -55,6 +66,7 @@ export async function verifyClaims(
         const missingFields: string[] = [];
         if (claim.passed !== undefined && execution.passed === undefined) missingFields.push('passed');
         if (claim.failed !== undefined && execution.failed === undefined) missingFields.push('failed');
+        if (claim.skipped !== undefined && execution.skipped === undefined) missingFields.push('skipped');
         if (claim.total !== undefined && execution.total === undefined) missingFields.push('total');
         const reason = `Claim specified test counts (${missingFields.join(', ')}), but parser could not extract them from command output`;
         details = details ? `${details}; ${reason}` : reason;
@@ -72,6 +84,13 @@ export async function verifyClaims(
         details = details
           ? `${details}; claimed ${claim.failed} failed but observed ${execution.failed}`
           : `Claimed ${claim.failed} failed but observed ${execution.failed}`;
+      }
+
+      if (claim.skipped !== undefined && execution.skipped !== undefined && execution.skipped !== claim.skipped) {
+        upheld = false;
+        details = details
+          ? `${details}; claimed ${claim.skipped} skipped but observed ${execution.skipped}`
+          : `Claimed ${claim.skipped} skipped but observed ${execution.skipped}`;
       }
 
       if (claim.total !== undefined && execution.total !== undefined && execution.total !== claim.total) {

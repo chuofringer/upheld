@@ -5,6 +5,7 @@ export interface TestsPassClaim {
   cmd: string;
   passed?: number;
   failed?: number;
+  skipped?: number;
   total?: number;
   description?: string;
 }
@@ -29,6 +30,7 @@ export interface TestResultMetrics {
   exitCode: number;
   passed?: number;
   failed?: number;
+  skipped?: number;
   total?: number;
   framework?: 'pytest' | 'vitest' | 'jest' | 'generic';
   stdout: string;

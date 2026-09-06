@@ -1,0 +1,3 @@
+
+ Tests  4 passed, 1 skipped (5)
+ Duration  120ms

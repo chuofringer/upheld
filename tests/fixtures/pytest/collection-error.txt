@@ -1,0 +1,11 @@
+============================= test session starts ==============================
+rootdir: /workspace
+collected 0 items / 1 error
+
+==================================== ERRORS ====================================
+________________________ ERROR collecting tests/test_broken.py ________________________
+ImportError: No module named 'non_existent_module'
+=========================== short test summary info ============================
+ERROR tests/test_broken.py
+!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+=============================== 1 error in 0.05s ===============================

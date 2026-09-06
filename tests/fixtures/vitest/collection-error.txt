@@ -1,0 +1,8 @@
+
+ FAIL  tests/broken.test.ts
+Error: SyntaxError: Unexpected token
+       at transform (src/index.ts:1:1)
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Duration  50ms

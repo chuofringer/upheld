@@ -1,0 +1,10 @@
+PASS src/foo.test.js
+FAIL src/bar.test.js
+  ● Test suite failed to run
+    TypeError: Cannot read properties of undefined
+
+Test Suites: 1 failed, 1 passed, 2 total
+Tests:       2 failed, 1 skipped, 1 todo, 6 passed, 10 total
+Snapshots:   0 total
+Time:        3.456 s
+Ran all test suites.
