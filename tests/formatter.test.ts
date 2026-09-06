@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatTerminalTable, formatMarkdownSummary, formatGitHubJobSummary, formatSarifReport } from '../src/formatter.js';
+import { formatTerminalTable, formatMarkdownSummary, formatGitHubJobSummary, formatSarifReport, formatHtmlReport } from '../src/formatter.js';
 import { VerifyReport } from '../src/types.js';
 
 describe('Formatters', () => {
@@ -182,5 +182,22 @@ describe('Formatters', () => {
       const sarif = JSON.parse(formatSarifReport(cleanReport));
       expect(sarif.runs[0].results).toHaveLength(0);
     });
+  });
+
+  it('formats self-contained HTML report with dark theme, claims table, mismatch notes, and counts', () => {
+    const html = formatHtmlReport(sampleReport);
+    expect(html).toContain('<!DOCTYPE html>');
+    expect(html).toContain('<html');
+    expect(html).toContain('Upheld');
+    expect(html).toContain('Claims vs Evidence');
+    expect(html).toContain('README.md');
+    expect(html).toContain('pytest');
+    expect(html).toContain('src/temp.ts');
+    expect(html).toContain('Discrepancy Details');
+    expect(html).toContain('Command exited with non-zero code 1');
+    expect(html).toContain('<style>');
+    // No external CDN stylesheets/scripts
+    expect(html).not.toContain('http://');
+    expect(html).not.toContain('https://');
   });
 });

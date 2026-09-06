@@ -1,11 +1,19 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { resolve } from 'node:path';
-import { writeFileSync, unlinkSync, existsSync } from 'node:fs';
+import { writeFileSync, unlinkSync, existsSync, readFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { execSync } from 'node:child_process';
 import { runCli } from '../src/cli.js';
 
 describe('CLI Integration', () => {
   const fixturesDir = resolve(__dirname, '../examples/fixtures');
+  const tempHtmlPath = resolve(tmpdir(), `upheld-test-report-${Date.now()}.html`);
+
+  afterEach(() => {
+    if (existsSync(tempHtmlPath)) {
+      unlinkSync(tempHtmlPath);
+    }
+  });
 
   it('runs upheld verify in report mode on upheld fixture with exit code 0', async () => {
     const code = await runCli([
@@ -59,6 +67,50 @@ describe('CLI Integration', () => {
       '0',
     ]);
     expect(code).toBe(0);
+  });
+
+  it('runs upheld verify with --html <file> on unmet fixture and writes a self-contained HTML report with key strings', async () => {
+    const code = await runCli([
+      'verify',
+      '--html',
+      tempHtmlPath,
+      resolve(fixturesDir, 'claims-unmet.json'),
+      '--cwd',
+      resolve(__dirname, '..'),
+      '--no-unclaimed',
+      '--since',
+      '0',
+    ]);
+    expect(code).toBe(0);
+    expect(existsSync(tempHtmlPath)).toBe(true);
+    const content = readFileSync(tempHtmlPath, 'utf-8');
+    expect(content).toContain('<!DOCTYPE html>');
+    expect(content).toContain('Upheld');
+    expect(content).toContain('Claims vs Evidence');
+    expect(content).toContain('UNMET');
+    expect(content).toContain('Discrepancy Details');
+    expect(content).toContain('<style>');
+  });
+
+  it('runs upheld verify with --html <file> on upheld fixture and writes HTML report with UPHELD status', async () => {
+    const code = await runCli([
+      'verify',
+      '--html',
+      tempHtmlPath,
+      resolve(fixturesDir, 'claims-upheld.json'),
+      '--cwd',
+      resolve(__dirname, '..'),
+      '--no-unclaimed',
+      '--since',
+      '0',
+    ]);
+    expect(code).toBe(0);
+    expect(existsSync(tempHtmlPath)).toBe(true);
+    const content = readFileSync(tempHtmlPath, 'utf-8');
+    expect(content).toContain('<!DOCTYPE html>');
+    expect(content).toContain('UPHELD');
+    expect(content).toContain('ALL CLAIMS UPHELD');
+    expect(content).toContain('Claims vs Evidence');
   });
 
   it('runs upheld verify with multi-path upheld fixture successfully', async () => {
