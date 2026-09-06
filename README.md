@@ -13,7 +13,7 @@ Agents often claim they performed tasks, passed test suites, or wrote specific f
 - **Empirical Re-run**: Re-runs claimed test commands (`pytest`, `vitest`, `jest`, or arbitrary shell commands) and compares parsed outputs (passed/failed/total counts and exit status) to what was claimed.
 - **File Artifact Verification**: Checks for write evidence that claimed file paths were created or modified during the run via git status (`M`, `A`, `??`) or modification time (`mtime`) against `--since`; pre-existing untouched files evaluate to unmet.
 - **Unclaimed Change Detection**: Identifies files modified or created in git that were never claimed by the agent.
-- **Harness Agnostic**: Works with Claude Code, Cursor, Codex, OpenHands, Aider, custom CI/CD pipelines, or standalone CLIs.
+- **Harness Agnostic**: Evaluates JSON claims from any producer or agent workflow.
 - **Report & Strict Modes**:
   - **Report Mode (default)**: Emits a structured Claims vs Evidence table and exits `0` for transparent observation.
   - **Strict Mode (`--strict`)**: Exits with a non-zero code if any claim is unmet or fails.
