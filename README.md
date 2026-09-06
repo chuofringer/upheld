@@ -11,7 +11,7 @@ Agents often claim they performed tasks, passed test suites, or wrote specific f
 ## Features
 
 - **Empirical Re-run**: Re-runs claimed test commands (`pytest`, `vitest`, `jest`, or arbitrary shell commands) and compares parsed outputs (passed/failed/total counts and exit status) to what was claimed.
-- **File Artifact Verification**: Checks that claimed file paths actually exist on disk.
+- **File Artifact Verification**: Checks for write evidence that claimed file paths were created or modified during the run via git status (`M`, `A`, `??`) or modification time (`mtime`) against `--since`; pre-existing untouched files evaluate to unmet.
 - **Unclaimed Change Detection**: Identifies files modified or created in git that were never claimed by the agent.
 - **Harness Agnostic**: Works with Claude Code, Cursor, Codex, OpenHands, Aider, custom CI/CD pipelines, or standalone CLIs.
 - **Report & Strict Modes**:
@@ -112,8 +112,8 @@ Upheld — Claims vs Evidence
 
 Status   | Claim Type    | Claim                          | Evidence
 ---------+---------------+--------------------------------+------------------------------------------
-UPHELD   | file_written  | path: README.md                | exists (size: 2150 B)
-UPHELD   | file_written  | path: package.json             | exists (size: 950 B)
+UPHELD   | file_written  | path: README.md                | exists (size: 2150 B, modified/created)
+UPHELD   | file_written  | path: package.json             | exists (size: 950 B, modified/created)
 UPHELD   | tests_pass    | cmd: npm test, passed: 18      | exit: 0, passed: 18, failed: 0, total: 18
 UNMET    | tests_pass    | cmd: pytest, passed: 5         | exit: 1, passed: 3, failed: 2, total: 5
 UNCLAIMED| unclaimed_file| (none)                         | unclaimed file written/modified: temp.log
@@ -133,14 +133,16 @@ Summary:
 Upheld can run as a Claude Code Stop-hook to verify an agent's claims before concluding a session. See [`examples/claude-code-hook/`](./examples/claude-code-hook/) for setup and scripts.
 
 ### GitHub Actions
-Add Upheld to your CI workflow using our composite action:
+To verify claims in CI, run the built CLI directly or invoke local verify steps:
 
 ```yaml
-- uses: chuofringer/upheld@main
-  with:
-    claims-file: '.upheld/claims.json'
-    strict: 'false' # report mode
+- name: Verify Agent Claims
+  run: |
+    npm ci && npm run build
+    node dist/bin.js verify .upheld/claims.json
 ```
+
+*(Note: Direct composite action usage via `uses: chuofringer/upheld@main` will be available after PR #1 merges to `main`.)*
 
 ---
 
