@@ -80,7 +80,7 @@
               <div class="terminal-body">
                 <div class="terminal-line">
                   <span class="terminal-prompt">$</span>
-                  <span class="text-secondary">upheld verify --transcript ./agent-session.json</span>
+                  <span class="text-secondary">node dist/bin.js verify --transcript ./agent-session.json</span>
                 </div>
 
                 <div class="audit-entry upheld">
@@ -88,26 +88,26 @@
                     <span class="claim-tag">[CLAIM: file_written]</span>
                     <span class="verdict-badge upheld">UPHELD</span>
                   </div>
-                  <div class="audit-text">"Created src/auth/jwt.rs with HMAC validation"</div>
-                  <div class="audit-evidence">Evidence: WriteTool invoked (148 lines) + AST check passed</div>
+                  <div class="audit-text">"Created src/auth/token.ts with HMAC validation"</div>
+                  <div class="audit-evidence">Evidence: File write event logged (148 bytes written to src/auth/token.ts)</div>
                 </div>
 
                 <div class="audit-entry refuted">
                   <div class="audit-meta">
-                    <span class="claim-tag">[CLAIM: test_passed]</span>
+                    <span class="claim-tag">[CLAIM: tests_pass]</span>
                     <span class="verdict-badge refuted">REFUTED</span>
                   </div>
-                  <div class="audit-text">"Ran test suite; all 24 tests passed"</div>
-                  <div class="audit-evidence">Evidence: Process exit code 101 (2 assertions failed in jwt_test.rs)</div>
+                  <div class="audit-text">"Ran test suite; all tests passing"</div>
+                  <div class="audit-evidence">Evidence: Test process exited with non-zero code (exit code 1)</div>
                 </div>
 
                 <div class="audit-entry unsub">
                   <div class="audit-meta">
-                    <span class="claim-tag">[CLAIM: benchmark_hit]</span>
+                    <span class="claim-tag">[UNCLAIMED]</span>
                     <span class="verdict-badge unsub">UNSUBSTANTIATED</span>
                   </div>
-                  <div class="audit-text">"Optimized latency down to 2ms"</div>
-                  <div class="audit-evidence">Evidence: No benchmark command executed during session</div>
+                  <div class="audit-text">"Optimized database connection pooling latency"</div>
+                  <div class="audit-evidence">Evidence: No corresponding write or test evidence in session transcript</div>
                 </div>
               </div>
             </div>
@@ -132,7 +132,7 @@
             <div class="step-number">01</div>
             <h3 class="step-title">Ingest Telemetry</h3>
             <p class="step-desc">
-              Captures structured transcripts: tool call arguments, stdout/stderr streams, process exit codes, and file mutation payloads from agent execution envelopes.
+              Captures structured transcripts: tool call arguments, stdout/stderr streams, process exit codes, and file write payloads from agent execution envelopes.
             </p>
             <div class="step-code-snippet">
               // Ingests session transcript<br>
@@ -144,11 +144,11 @@
             <div class="step-number">02</div>
             <h3 class="step-title">Correlate Claims</h3>
             <p class="step-desc">
-              Extracts semantic assertions from the agent's prose response and maps each assertion directly to its mandatory concrete evidence requirement.
+              Extracts assertions from the agent's prose response and correlates them against concrete write events and test execution receipts.
             </p>
             <div class="step-code-snippet">
               // Maps claim to evidence rule<br>
-              "fixed bug" ➔ requires: git_diff + test_run
+              "fixed bug" ➔ requires: file_written + tests_pass
             </div>
           </div>
 
@@ -156,11 +156,11 @@
             <div class="step-number">03</div>
             <h3 class="step-title">Verify & Report</h3>
             <p class="step-desc">
-              Evaluates whether each claim holds up against the empirical evidence. Outputs a structured audit manifest (Report mode by default; exits non-zero in <code>--strict</code>).
+              Evaluates whether each claim holds up against empirical evidence. Outputs a report by default; exits non-zero under <code>--strict</code>.
             </p>
             <div class="step-code-snippet">
               // Verdict breakdown<br>
-              upheld: 8 | refuted: 1 | unsubstantiated: 0
+              upheld: 2 | refuted: 1 | unsubstantiated: 0
             </div>
           </div>
         </div>
@@ -172,9 +172,9 @@
       <div class="container">
         <div class="section-header">
           <div class="section-eyebrow">Verification Rules</div>
-          <h2 class="section-title">Strict Evidence Standards by Claim Type</h2>
+          <h2 class="section-title">Thin-Wedge Claim Types & Evidence Standards</h2>
           <p class="section-desc">
-            Passive assumptions do not count as proof. Every claim type enforces concrete verification rules.
+            Passive assumptions do not count as proof. Upheld focuses on clear, deterministic evidence requirements.
           </p>
         </div>
 
@@ -182,78 +182,39 @@
           <div class="claim-type-card">
             <div class="claim-type-header">
               <span class="claim-type-title">file_written</span>
-              <span class="claim-type-rule">Write Event</span>
+              <span class="claim-type-rule">Write Evidence</span>
             </div>
             <p class="claim-type-desc">
-              Verifies the agent actually performed a file write or edit operation. Mere existence on disk is rejected as insufficient proof.
+              Verifies that the agent actually executed a file write or edit event during the session. Mere presence on disk is rejected as insufficient proof.
             </p>
             <div class="evidence-spec">
-              <span><strong>Required Evidence:</strong> Tool call payload or disk delta record with nonzero mutated bytes.</span>
+              <span><strong>Required Evidence:</strong> Recorded tool write event or mutation payload with file path and content.</span>
             </div>
           </div>
 
           <div class="claim-type-card">
             <div class="claim-type-header">
-              <span class="claim-type-title">command_run</span>
-              <span class="claim-type-rule">Process Receipt</span>
+              <span class="claim-type-title">tests_pass</span>
+              <span class="claim-type-rule">Zero Exit Receipt</span>
             </div>
             <p class="claim-type-desc">
-              Validates that claimed terminal commands were executed within the current session runtime with timestamps and process records.
+              Verifies that the claimed test suite actually ran to completion with a successful exit code (0) and matching command invocation.
             </p>
             <div class="evidence-spec">
-              <span><strong>Required Evidence:</strong> Recorded execution envelope with command string and spawned PID.</span>
+              <span><strong>Required Evidence:</strong> Process execution receipt for the test command with exit code 0.</span>
             </div>
           </div>
 
           <div class="claim-type-card">
             <div class="claim-type-header">
-              <span class="claim-type-title">test_passed</span>
-              <span class="claim-type-rule">Zero Exit + Suite Pass</span>
+              <span class="claim-type-title">unclaimed</span>
+              <span class="claim-type-rule">Audit Gap</span>
             </div>
             <p class="claim-type-desc">
-              Requires an exit code of 0 together with parsed test-runner summary counters. Masks and swallowed errors (<code>|| true</code>) are flagged.
+              Identifies statements made in agent prose that lack any corresponding write evidence or test receipts in the session transcript.
             </p>
             <div class="evidence-spec">
-              <span><strong>Required Evidence:</strong> Exit code 0 + non-empty test suite stdout proving execution.</span>
-            </div>
-          </div>
-
-          <div class="claim-type-card">
-            <div class="claim-type-header">
-              <span class="claim-type-title">diff_applied</span>
-              <span class="claim-type-rule">Tree Mutation</span>
-            </div>
-            <p class="claim-type-desc">
-              Verifies that the file tree or target buffer changed according to the claimed patch or refactor specification.
-            </p>
-            <div class="evidence-spec">
-              <span><strong>Required Evidence:</strong> Git staging delta or AST transformation verification.</span>
-            </div>
-          </div>
-
-          <div class="claim-type-card">
-            <div class="claim-type-header">
-              <span class="claim-type-title">lint_clean</span>
-              <span class="claim-type-rule">Static Analysis</span>
-            </div>
-            <p class="claim-type-desc">
-              Validates claims like "no lint errors remain" against actual linter runs and zero-diagnostic outputs.
-            </p>
-            <div class="evidence-spec">
-              <span><strong>Required Evidence:</strong> Linter CLI invocation record with clean diagnostic buffer.</span>
-            </div>
-          </div>
-
-          <div class="claim-type-card">
-            <div class="claim-type-header">
-              <span class="claim-type-title">benchmark_hit</span>
-              <span class="claim-type-rule">Telemetry Proof</span>
-            </div>
-            <p class="claim-type-desc">
-              Checks quantitative performance claims ("improved throughput 3x") against captured benchmark logs.
-            </p>
-            <div class="evidence-spec">
-              <span><strong>Required Evidence:</strong> Benchmark run execution log with recorded numeric baseline comparison.</span>
+              <span><strong>Verdict:</strong> Flagged as UNSUBSTANTIATED during report generation or rejected in <code>--strict</code> mode.</span>
             </div>
           </div>
         </div>
@@ -293,45 +254,36 @@
                   <span class="claim-quote">"Created config/auth.json with default rate limits"</span>
                 </td>
                 <td class="mono claim-kind">file_written</td>
-                <td class="evidence-cell">WriteTool call with file payload</td>
-                <td class="evidence-cell">WriteTool logged: <code>config/auth.json</code> (24 lines written)</td>
+                <td class="evidence-cell">Tool write event for config/auth.json</td>
+                <td class="evidence-cell">Write event recorded: <code>config/auth.json</code> (420 bytes)</td>
                 <td><span class="verdict-badge upheld">UPHELD</span></td>
               </tr>
               <tr>
                 <td class="claim-cell">
-                  <span class="claim-quote">"Executed full test suite; 12 unit tests passing"</span>
+                  <span class="claim-quote">"Ran test suite; all unit tests passing"</span>
                 </td>
-                <td class="mono claim-kind">test_passed</td>
-                <td class="evidence-cell">Test command with exit code 0 and summary</td>
-                <td class="evidence-cell"><code>cargo test</code> exited 0; stdout: <em>"12 passed; 0 failed"</em></td>
+                <td class="mono claim-kind">tests_pass</td>
+                <td class="evidence-cell">Test command execution receipt with exit code 0</td>
+                <td class="evidence-cell"><code>npm test</code> exited 0</td>
                 <td><span class="verdict-badge upheld">UPHELD</span></td>
               </tr>
               <tr>
                 <td class="claim-cell">
-                  <span class="claim-quote">"Fixed memory leak in connection pooling loop"</span>
+                  <span class="claim-quote">"Ran test suite; all unit tests passing"</span>
                 </td>
-                <td class="mono claim-kind">diff_applied</td>
-                <td class="evidence-cell">AST patch or git diff in pool module</td>
-                <td class="evidence-cell">No file edits recorded in <code>src/pool.rs</code> during run</td>
+                <td class="mono claim-kind">tests_pass</td>
+                <td class="evidence-cell">Test command execution receipt with exit code 0</td>
+                <td class="evidence-cell"><code>npm test</code> exited 1 (assertion failure)</td>
                 <td><span class="verdict-badge refuted">REFUTED</span></td>
               </tr>
               <tr>
                 <td class="claim-cell">
-                  <span class="claim-quote">"Verified endpoint response time is under 15ms"</span>
+                  <span class="claim-quote">"Created src/pool.ts to optimize latency"</span>
                 </td>
-                <td class="mono claim-kind">benchmark_hit</td>
-                <td class="evidence-cell">Benchmark execution record</td>
-                <td class="evidence-cell">No benchmark command executed in session log</td>
+                <td class="mono claim-kind">unclaimed</td>
+                <td class="evidence-cell">Write event or test receipt</td>
+                <td class="evidence-cell">No write event or command found in transcript</td>
                 <td><span class="verdict-badge unsub">UNSUBSTANTIATED</span></td>
-              </tr>
-              <tr>
-                <td class="claim-cell">
-                  <span class="claim-quote">"Resolved all ESLint warnings in frontend components"</span>
-                </td>
-                <td class="mono claim-kind">lint_clean</td>
-                <td class="evidence-cell">Linter run with 0 errors & 0 warnings</td>
-                <td class="evidence-cell"><code>eslint</code> run logged 3 unresolved <code>no-unused-vars</code> warnings</td>
-                <td><span class="verdict-badge refuted">REFUTED</span></td>
               </tr>
             </tbody>
           </table>
@@ -466,14 +418,14 @@
 <span class="code-command">git</span> clone https://github.com/chuofringer/upheld.git
 <span class="code-command">cd</span> upheld
 
-<span class="code-comment"># 2. Build the verification binary</span>
-<span class="code-command">cargo</span> build <span class="code-flag">--release</span>
+<span class="code-comment"># 2. Install dependencies & build TypeScript source</span>
+<span class="code-command">npm</span> install && <span class="code-command">npm</span> run build
 
 <span class="code-comment"># 3. Verify an agent transcript in default (Report) mode</span>
-./target/release/upheld verify <span class="code-flag">--transcript</span> <span class="code-string">./session.json</span>
+<span class="code-command">node</span> dist/bin.js verify <span class="code-flag">--transcript</span> <span class="code-string">./session.json</span>
 
 <span class="code-comment"># 4. Optional: Run with --strict to fail CI on unverified claims</span>
-./target/release/upheld verify <span class="code-flag">--strict</span> <span class="code-flag">--transcript</span> <span class="code-string">./session.json</span></code></pre>
+<span class="code-command">node</span> dist/bin.js verify <span class="code-flag">--strict</span> <span class="code-flag">--transcript</span> <span class="code-string">./session.json</span></code></pre>
           </div>
 
           <div class="code-block-wrapper">
@@ -568,7 +520,7 @@
             </h3>
             <div class="faq-answer">
               <p>
-                No. Upheld avoids non-deterministic LLM-as-a-judge scoring. Verification is computed via structural log analysis, exit code checks, AST diffs, and cryptographic hash comparisons.
+                No. Upheld avoids non-deterministic LLM-as-a-judge scoring. Verification is computed via deterministic correlation of write evidence and process exit receipts.
               </p>
             </div>
           </div>
