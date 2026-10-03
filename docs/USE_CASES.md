@@ -16,7 +16,7 @@ This document records verification evidence for the core use cases exercised aga
 | 6 | `--strict` non-zero on unmet | `cursor/upheld-scaffold-v0-5bfe` (PR #1) | `echo '{"claims":[{"type":"file_written","path":"README.md"}]}' \| node ./dist/bin.js verify --no-unclaimed --strict` | `1` | `UNMET` with non-zero exit code `1` | ✅ Yes |
 | 7 | `npm run corpus` on #6 tip | `cursor/false-completion-fixture-corpus-6c33` (PR #6) | `npm run corpus` | `0` | 1 test file passed (25 tests passed across 10 fixtures) | ✅ Yes |
 | 8a | Spot-check Fixture 07 (`detectUnclaimed`) | `cursor/false-completion-fixture-corpus-6c33` (PR #6) | `touch unclaimed_scratchpad.tmp && node ./dist/bin.js verify --since 0 examples/corpus/07-unclaimed-side-effects/claims.json ; rm -f unclaimed_scratchpad.tmp` | `0` | `UPHELD` for 2 claims, `UNCLAIMED` for `unclaimed_scratchpad.tmp` | ✅ Yes |
-| 8b | Spot-check Fixture 09 (`write-evidence`) | `cursor/false-completion-fixture-corpus-6c33` (PR #6) | `node ./dist/bin.js verify --since 0 examples/corpus/09-fully-upheld-verification/claims.json` vs `node ./dist/bin.js verify --no-unclaimed examples/corpus/09-fully-upheld-verification/claims.json` | `0` | With write evidence (`--since 0`): `UPHELD` (2/2); Without write evidence: `UNMET` for `package.json` | ✅ Yes |
+| 8b | Spot-check Fixture 09 (`write-evidence`) | `cursor/false-completion-fixture-corpus-6c33` (PR #6) | `node ./dist/bin.js verify --since 0 examples/corpus/09-fully-upheld-verification/claims.json` vs `node ./dist/bin.js verify --no-unclaimed examples/corpus/09-fully-upheld-verification/claims.json` | `0` | With write evidence (`--since 0`): `UPHELD` (2/2); Without write evidence: `UNMET` for `LICENSE` | ✅ Yes |
 
 ---
 
