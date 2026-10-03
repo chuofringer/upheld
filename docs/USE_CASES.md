@@ -238,7 +238,7 @@ Notes & Mismatches:
   - **Result**: `UPHELD` (2 upheld, 0 unmet)
 - **Without write evidence (unmodified file, clean git, no `--since`)**:
   - **Command**: `node ./dist/bin.js verify --no-unclaimed examples/corpus/09-fully-upheld-verification/claims.json`
-  - **Result**: `UNMET` for `package.json` (1 upheld, 1 unmet; notes: `File 'package.json' exists but has no evidence of write or change this run`)
+  - **Result**: `UNMET` for `LICENSE` (1 upheld, 1 unmet; notes: `File 'LICENSE' exists but has no evidence of write or change this run`)
 
 ---
 
