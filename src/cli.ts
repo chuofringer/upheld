@@ -7,6 +7,7 @@ import { initProject } from './init.js';
 import { postGitHubCheckRun } from './github.js';
 import { extractClaimsFromTranscript } from './extractor.js';
 import { Claim, ClaimsDocument, VerifyOptions, VerifyReport } from './types.js';
+import { getPackageVersion } from './version.js';
 
 function printHelp(): void {
   console.log(`
@@ -85,11 +86,8 @@ export async function runCli(args: string[] = process.argv.slice(2)): Promise<nu
   }
 
   if (args.includes('-v') || args.includes('--version')) {
-    try {
-      console.log('upheld v0.0.1');
-    } catch {
-      console.log('0.0.1');
-    }
+    const version = getPackageVersion();
+    console.log(`upheld v${version}`);
     return 0;
   }
 

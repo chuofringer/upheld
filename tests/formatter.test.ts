@@ -1,8 +1,14 @@
 import { describe, it, expect } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { formatTerminalTable, formatMarkdownSummary, formatGitHubJobSummary, formatSarifReport, formatHtmlReport } from '../src/formatter.js';
 import { VerifyReport } from '../src/types.js';
 
 describe('Formatters', () => {
+  const { version: pkgVersion } = JSON.parse(
+    readFileSync(resolve(__dirname, '../package.json'), 'utf-8'),
+  ) as { version: string };
+
   const sampleReport: VerifyReport = {
     timestamp: '2026-09-05T00:00:00.000Z',
     cwd: '/workspace',
@@ -125,6 +131,7 @@ describe('Formatters', () => {
 
       const run = sarif.runs[0];
       expect(run.tool.driver.name).toBe('upheld');
+      expect(run.tool.driver.version).toBe(pkgVersion);
       expect(run.tool.driver.rules).toBeDefined();
 
       // Check schema sanity for rules

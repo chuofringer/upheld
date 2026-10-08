@@ -61,7 +61,9 @@ describe('False-Completion Fixture Corpus', () => {
         sinceTimestamp: Date.now() + 100_000_000,
       });
 
-      // package.json is pre-existing and unmodified, so it should be UNMET under honesty rules
+      // LICENSE is pre-existing and unmodified, so it should be UNMET under honesty rules
+      // (use LICENSE rather than package.json — version bumps dirty package.json in git and
+      // would incorrectly supply write evidence during release prep)
       const fileClaim = reportWithoutEvidence.results.find((r) => r.type === 'file_written');
       expect(fileClaim?.status).toBe('unmet');
       expect(fileClaim?.details).toContain('no evidence of write or change this run');

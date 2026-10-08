@@ -1,4 +1,5 @@
 import { VerificationResult, VerifyReport } from './types.js';
+import { getPackageVersion } from './version.js';
 
 export function formatTerminalTable(report: VerifyReport): string {
   const lines: string[] = [];
@@ -236,7 +237,7 @@ export function formatSarifReport(report: VerifyReport): string {
         tool: {
           driver: {
             name: 'upheld',
-            version: '0.0.1',
+            version: getPackageVersion(),
             informationUri: 'https://github.com/chuofringer/upheld',
             rules: activeRules,
           },

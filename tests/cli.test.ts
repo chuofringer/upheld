@@ -209,10 +209,23 @@ describe('CLI Integration', () => {
   });
 
   it('shows version with -v or --version', async () => {
-    const code1 = await runCli(['--version']);
-    expect(code1).toBe(0);
-    const code2 = await runCli(['-v']);
-    expect(code2).toBe(0);
+    const { version } = JSON.parse(
+      readFileSync(resolve(__dirname, '../package.json'), 'utf-8'),
+    ) as { version: string };
+
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    try {
+      const code1 = await runCli(['--version']);
+      expect(code1).toBe(0);
+      expect(logSpy).toHaveBeenCalledWith(`upheld v${version}`);
+
+      logSpy.mockClear();
+      const code2 = await runCli(['-v']);
+      expect(code2).toBe(0);
+      expect(logSpy).toHaveBeenCalledWith(`upheld v${version}`);
+    } finally {
+      logSpy.mockRestore();
+    }
   });
 });
 
