@@ -7,9 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changed
-- (none yet — awaiting first public publish)
-
 ## [0.1.0] — TBD
 
 > Package version and local verify path are prepared on `main` via the release prep PR.
@@ -27,8 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixtures and test suite covering upheld, unmet, and deliberate discrepancy claims.
 - `.npmignore` and publish-prep configuration for clean tarball.
 
-### Fixed
-- CLI `--version` / `-v` and SARIF `tool.driver.version` now read from `package.json` instead of a hardcoded `0.0.1`.
+### Changed
+- CLI `--version` / `-v` and SARIF `tool.driver.version` now read from `package.json` (previously hardcoded to `0.0.1`, which was never published to npm).
 
 [Unreleased]: https://github.com/chuofringer/upheld/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/chuofringer/upheld/releases/tag/v0.1.0
