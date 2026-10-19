@@ -1,5 +1,7 @@
 # Claude Code Hook Integration Guide
 
+> **Illustrative only.** This guide and the example in `examples/claude-code-hook/` were written against an assumed hook configuration and were never validated against a live Claude Code session. In particular, the `settings.json` shape shown below predates Claude Code's current hooks schema (`hooks.Stop[].hooks[].command`), and nothing here reads the `transcript_path` that the real Stop hook passes on stdin. The project is archived; adapt the ideas rather than copying the files.
+
 Upheld integrates natively with [Claude Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code) hooks. By utilizing a **Stop Hook** (or custom subagent evaluation script), you can prevent Claude Code from ending a session or declaring completion when its claims are unverified or false.
 
 ---
