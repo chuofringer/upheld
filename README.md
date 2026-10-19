@@ -12,6 +12,8 @@
   Harness-agnostic claims-vs-evidence verifier for AI coding agents — matching named claims to deterministic receipts.
 </p>
 
+> **Status (October 2026): archived.** Upheld was a prototype. It was never published to npm, the GitHub Action and the editor hook examples were never validated against live harnesses, and it is no longer developed. The CLI still builds and runs from source as documented below; the repository is kept read-only as a record.
+
 <p align="center">
   Website → <a href="https://vibemapper.dev">vibemapper.dev</a>
 </p>
@@ -45,7 +47,7 @@ Upheld is a **CLI** verifier for any agent harness. Open and DIY loops (OpenCode
 npm install && npm run build
 ```
 
-You do **not** reinstall every agent turn. (A global `npm i -g upheld` path comes with a tagged release — not claimable yet.)
+You do **not** reinstall every agent turn. There is no npm release; run from source.
 
 ### 2. Write claims
 
@@ -331,8 +333,8 @@ pre-commit:
       run: test -f .upheld/claims.json && npx . verify --strict .upheld/claims.json || true
 ```
 
-### Optional adapter: Claude Code Stop-Hook
-Upheld can run as a Claude Code Stop-hook to extract claims from the session transcript and verify them before concluding a session. See [`examples/claude-code-hook/`](./examples/claude-code-hook/) for setup and scripts.
+### Optional adapter: Claude Code Stop-Hook (illustrative)
+Upheld can run as a Claude Code Stop-hook to extract claims from the session transcript and verify them before concluding a session. See [`examples/claude-code-hook/`](./examples/claude-code-hook/) for setup and scripts. **Treat the example as illustrative:** the `settings.json` shape it emits (and the one `upheld init` writes) predates Claude Code's current hooks schema (`hooks.Stop[].hooks[].command`), and the script was not validated against a live session.
 
 ### Optional adapter: Codex CLI Session Hook
 Extract and verify claims from Codex CLI sessions and tool events. See [`examples/codex-hook/`](./examples/codex-hook/) for adapters and setup.
@@ -350,7 +352,7 @@ To verify claims in CI, run the built CLI directly or invoke local verify steps:
     node dist/bin.js verify .upheld/claims.json
 ```
 
-*(Note: Direct composite action usage via `uses: chuofringer/upheld@main` will be available after PR #1 merges to `main`.)*
+*(The composite `action.yml` in this repository installs `upheld` from npm, which was never published, so it does not work for consumers; use the inline steps above.)*
 
 ---
 
